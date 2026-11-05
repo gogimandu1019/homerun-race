@@ -7,9 +7,9 @@
 <style>
   :root { --bg:#0b1220; --panel:#131c2e; --text:#eef2f8; --muted:#8fa0bb; --gold:#ffc83d; --accent:#4fd1ff; }
   * { box-sizing:border-box; }
-  html,body { margin:0; height:100%; background:var(--bg); color:var(--text);
+  html,body { margin:0; background:var(--bg); color:var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
-  body { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; gap:10px; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:safe center; padding:16px; gap:10px; }
   #hud { width:100%; max-width:960px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .stat { background:var(--panel); border-radius:10px; padding:8px 14px; min-width:110px; }
   .stat .k { font-size:12px; color:var(--muted); }
@@ -93,6 +93,9 @@
   .sw button.on { outline:3px solid var(--gold); outline-offset:2px; }
   #ad { width:100%; max-width:960px; margin-top:28px; min-height:0; text-align:center; }
   #ad:empty { display:none; }
+  .foot { width:100%; max-width:960px; margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-wrap:wrap; gap:6px 10px; justify-content:center; font-size:12px; color:var(--muted); text-align:center; }
+  .foot a { color:#b8c4da; }
+  .foot .sep { opacity:.5; }
   .help { color:var(--muted); font-size:13px; text-align:center; }
   @media (max-width:600px){ .stat{min-width:0; padding:6px 10px} .stat .v{font-size:17px} .card h1{font-size:26px} }
 </style>
@@ -111,6 +114,11 @@
 <div class="help">공이 원 안으로 들어오는 순간 <b>클릭 / 탭 / 스페이스바</b>로 스윙! · 빠르면 좌측, 늦으면 우측으로 날아갑니다.</div>
 <!-- 광고: 게임 화면과 충분히 떨어진 아래쪽에만 둡니다 (실수 클릭 방지) -->
 <div id="ad"></div>
+<footer class="foot">
+  <span>건의사항·문의는 <a href="mailto:gogimandu.official@gmail.com">gogimandu.official@gmail.com</a> 으로 보내 주세요.</span>
+  <span class="sep">·</span>
+  <a href="/privacy.html">개인정보처리방침</a>
+</footer>
 <script>
 // ===== 광고 설정 =====
 // 애드센스 승인 후 게시자 ID(ca-pub-…)와 광고 단위 ID를 넣으면 광고가 켜집니다. 비워두면 광고 없음.
