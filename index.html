@@ -121,19 +121,19 @@ const MODES = {
   easy: { name:'이지', slow:2.6, kmh:[115,140], q:180, perfect:30, good:70, v0:110, vq:78, lsd:4.5 },
   hard: { name:'하드', slow:1.7, kmh:[130,155], q:110, perfect:14, good:38, v0:100, vq:84, lsd:6 },
 };
-// 유니폼 색상 (KBO 10개 구단 컬러 기준 · 로고/엠블럼은 쓰지 않음)
+// 유니폼 색상 (KBO 10개 구단 컬러 · 2026 정규시즌 최종순위 순 · 로고/엠블럼은 쓰지 않음)
 // body=상의, num=등번호, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
 const UNIFORMS = [
-  { id:'hanwha',  name:'한화 이글스',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
   { id:'kt',      name:'KT 위즈',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'ssg',     name:'SSG 랜더스',    body:'#00704a', num:'#ffffff', helmet:'#00704a' },
+  { id:'samsung', name:'삼성 라이온즈', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'kia',     name:'KIA 타이거즈',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
   { id:'lg',      name:'LG 트윈스',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
   { id:'doosan',  name:'두산 베어스',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
-  { id:'kiwoom',  name:'키움 히어로즈', body:'#820024', num:'#ffffff', helmet:'#820024' },
-  { id:'kia',     name:'KIA 타이거즈',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'samsung', name:'삼성 라이온즈', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'ssg',     name:'SSG 랜더스',    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422', accent:'#e6b422' },
   { id:'lotte',   name:'롯데 자이언츠', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
   { id:'nc',      name:'NC 다이노스',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
+  { id:'hanwha',  name:'한화 이글스',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'kiwoom',  name:'키움 히어로즈', body:'#820024', num:'#ffffff', helmet:'#820024' },
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
@@ -330,7 +330,7 @@ function showTitle(){
     </div>
     <p class="modeinfo" id="modeinfo"></p>
     <div class="opt"><span class="ol">유니폼</span>
-      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.stripe ? `repeating-linear-gradient(90deg, ${u.body} 0 5px, ${u.stripe} 5px 6px)` : u.body}"></button>`).join('')}</div>
+      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.stripe ? `repeating-linear-gradient(90deg, ${u.body} 0 5px, ${u.stripe} 5px 6px)` : u.accent ? `linear-gradient(135deg, ${u.body} 50%, ${u.accent} 50%)` : u.body}"></button>`).join('')}</div>
     </div>
     <p class="modeinfo" id="uname">${uniform.name}</p>
     <button id="go">경기 시작</button>
