@@ -23,7 +23,7 @@
   canvas { width:100%; height:auto; display:block; border-radius:14px; background:#0e2a17; touch-action:manipulation; cursor:crosshair; user-select:none; -webkit-user-select:none; }
   #overlay { position:absolute; inset:0; display:flex; overflow:auto; border-radius:14px; background:rgba(5,10,20,.78); }
   #overlay.hidden { display:none; }
-  .card { text-align:center; max-width:640px; width:100%; padding:20px; margin:auto; }
+  .card { text-align:center; max-width:780px; width:100%; padding:20px; margin:auto; }
   .card h1 { margin:0 0 6px; font-size:34px; }
   .card p { color:#c7d2e4; line-height:1.6; margin:6px 0; }
   .card small { color:var(--muted); }
@@ -37,14 +37,43 @@
   .save button { margin-top:0; font-size:16px; padding:10px 20px; }
   .save button:disabled { opacity:.5; cursor:default; }
   .msg { min-height:20px; font-size:13px; color:var(--muted); margin-top:6px; }
-  .lb { margin-top:12px; text-align:left; }
-  .lb h3 { margin:0 0 4px; font-size:14px; color:var(--muted); text-align:center; }
-  .lb table { width:100%; }
-  .lb tr.me td { color:var(--gold); font-weight:800; }
-  .lb td:first-child { width:28px; text-align:center; }
-  .lb td:last-child, .lb th:last-child { text-align:right; }
-  .row { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
-  .row > div { flex:1 1 220px; min-width:0; }
+  .panels { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; align-items:stretch; }
+  .panel { background:rgba(11,18,32,.88); border:1px solid #26324a; border-radius:12px; display:flex; flex-direction:column; text-align:left; min-width:0; overflow:hidden; }
+  .panel.solo { max-width:420px; margin:16px auto 0; }
+  .ph { display:flex; align-items:center; justify-content:space-between; gap:8px; height:44px; padding:0 14px; border-bottom:1px solid #26324a; flex:none; }
+  .ph h3 { margin:0; font-size:14px; color:var(--text); font-weight:700; white-space:nowrap; }
+  .ph .sub { font-size:12px; color:var(--muted); }
+  .pb { height:242px; overflow:auto; }
+  .panel.solo .pb { height:auto; max-height:200px; }
+  .pb .msg { padding:14px; margin:0; }
+  .pb table { width:100%; margin:0; table-layout:fixed; font-size:13px; }
+  .pb th { position:sticky; top:0; background:#111a2c; height:30px; padding:0 8px; font-size:12px; text-align:left; }
+  .pb td { height:30px; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pb th:first-child, .pb td:first-child { width:40px; text-align:center; padding:0 4px; }
+  .pb th:last-child, .pb td:last-child { text-align:right; }
+  .pb table.pts th:nth-child(2), .pb table.dist th:nth-child(2) { width:64px; }
+  .pb table.pts th:nth-child(4) { width:46px; } .pb table.pts td:nth-child(4) { text-align:right; } .pb table.pts th:nth-child(4) { text-align:right; }
+  .pb table.pts th:last-child { width:80px; } .pb table.dist th:last-child { width:80px; }
+  .pb table.mine th:nth-child(3) { width:72px; } .pb table.mine th:last-child { width:80px; }
+  .pb table.mine td:nth-child(3), .pb table.mine th:nth-child(3) { text-align:right; }
+  .pb tr.me td, .pb table.mine tr.hr td { color:var(--gold); font-weight:700; }
+  .pb .empty { text-align:center !important; color:var(--muted); height:60px; }
+  .endh { display:flex; align-items:center; justify-content:center; gap:10px; font-size:28px !important; margin:0 !important; }
+  .endh .tag { font-size:12px; font-weight:600; }
+  .endscore { margin:4px 0 0 !important; display:flex; align-items:baseline; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .endscore b { font-size:30px; color:var(--gold); }
+  .endscore span { color:#c7d2e4; }
+  .card .save { margin-top:10px; }
+  .card .msg { min-height:18px; margin-top:4px; }
+  .endbtns button { margin-top:14px; }
+  .ev { font-size:10px; color:var(--gold); margin-left:2px; }
+  .team { display:inline-flex; align-items:center; gap:5px; }
+  .team i { width:10px; height:10px; border-radius:50%; display:inline-block; flex:none; }
+  .team.none { color:var(--muted); }
+  .tabs { display:inline-flex; background:#0b1220; border:1px solid #33415e; border-radius:999px; padding:2px; }
+  .tabs button { margin:0; font-size:12px; padding:4px 12px; background:transparent; color:var(--muted); }
+  .tabs button.on { background:var(--gold); color:#1a1300; }
+  @media (max-width:640px){ .panels { grid-template-columns:1fr; } .pb { height:220px; } }
   button.ghost { background:transparent; color:var(--text); border:1px solid #3a4866; }
   .tag { display:inline-block; font-size:12px; padding:2px 10px; border-radius:999px; background:#26324a; color:#c7d2e4; }
   .opt { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
@@ -124,16 +153,16 @@ const MODES = {
 // 유니폼 색상 (KBO 10개 구단 컬러 · 2026 정규시즌 최종순위 순 · 로고/엠블럼은 쓰지 않음)
 // body=상의, num=등번호, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
 const UNIFORMS = [
-  { id:'kt',      name:'KT 위즈',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'samsung', name:'삼성 라이온즈', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
-  { id:'kia',     name:'KIA 타이거즈',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'lg',      name:'LG 트윈스',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
-  { id:'doosan',  name:'두산 베어스',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
-  { id:'ssg',     name:'SSG 랜더스',    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422', accent:'#e6b422' },
-  { id:'lotte',   name:'롯데 자이언츠', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
-  { id:'nc',      name:'NC 다이노스',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
-  { id:'hanwha',  name:'한화 이글스',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'kiwoom',  name:'키움 히어로즈', body:'#820024', num:'#ffffff', helmet:'#820024' },
+  { id:'kt',      name:'KT 위즈', short:'KT',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'samsung', name:'삼성 라이온즈', short:'삼성', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'kia',     name:'KIA 타이거즈', short:'KIA',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'lg',      name:'LG 트윈스', short:'LG',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
+  { id:'doosan',  name:'두산 베어스', short:'두산',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
+  { id:'ssg',     name:'SSG 랜더스', short:'SSG',    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422' },
+  { id:'lotte',   name:'롯데 자이언츠', short:'롯데', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
+  { id:'nc',      name:'NC 다이노스', short:'NC',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
+  { id:'hanwha',  name:'한화 이글스', short:'한화',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'kiwoom',  name:'키움 히어로즈', short:'키움', body:'#820024', num:'#ffffff', helmet:'#820024' },
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
@@ -257,24 +286,25 @@ function endGame(){
   if (score > best) { best = score; newBest = true; store.set('hr_best_' + mode, best); }
   $('best').textContent = best.toLocaleString();
   const longest = Math.max(0, ...results.filter(r=>r.homer).map(r=>r.dist));
-  let rows = results.map((r,i) => `<tr><td>${i+1}${r.ev?' ⭐':''}</td><td>${r.note}</td><td>${r.dist?r.dist.toFixed(1)+'m':'-'}</td><td>${r.pts.toLocaleString()}</td></tr>`).join('');
-  $('card').innerHTML = `<h1>${newBest?'🏆 신기록!':'경기 종료'}</h1>
-    <p><span class="tag">${M().name} 모드</span></p>
-    <p style="font-size:30px;font-weight:800;color:#ffc83d;margin:4px 0">${score.toLocaleString()}점</p>
-    <p>홈런 ${hrCount} / ${TOTAL} · 최장거리 ${longest ? longest.toFixed(1)+'m' : '-'}</p>
+  let rows = results.map((r,i) => `<tr class="${r.homer?'hr':''}"><td>${i+1}${r.ev?'<b class="ev">2×</b>':''}</td><td>${r.note}</td><td>${r.dist?r.dist.toFixed(1)+'m':'-'}</td><td>${r.pts.toLocaleString()}</td></tr>`).join('');
+  $('card').innerHTML = `<h1 class="endh">${newBest?'🏆 신기록!':'경기 종료'} <span class="tag">${M().name} 모드</span></h1>
+    <p class="endscore"><b>${score.toLocaleString()}점</b> <span>홈런 ${hrCount} / ${TOTAL} · 최장거리 ${longest ? longest.toFixed(1)+'m' : '-'}</span></p>
     <div class="save"><input id="nm" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="nickname"><button id="sv">점수 저장</button></div>
     <div class="msg" id="msg"></div>
-    <div class="row">
-      <div style="max-height:200px;overflow:auto"><table><tr><th>구</th><th>결과</th><th>거리</th><th>점수</th></tr>${rows}</table></div>
-      <div class="lb" id="lb"></div>
+    <div class="panels">
+      <div class="panel">
+        <div class="ph"><h3>📋 내 기록</h3><span class="sub">${teamCell(uniform.id)}</span></div>
+        <div class="pb"><table class="mine"><tr><th>#</th><th>결과</th><th>거리</th><th>점수</th></tr>${rows}</table></div>
+      </div>
+      <div class="panel" id="lb"></div>
     </div>
-    <div><button id="go">다시 하기</button> <button id="home" class="ghost">처음으로</button></div>`;
+    <div class="endbtns"><button id="go">다시 하기</button> <button id="home" class="ghost">처음으로</button></div>`;
   $('overlay').classList.remove('hidden');
   $('go').onclick = startGame;
   $('home').onclick = () => { pitch = null; swingT = -1; score = 0; hrCount = 0; results = []; eventSet = new Set(); setState('title'); showTitle(); renderDots(); };
   const nm = $('nm'), sv = $('sv');
   try { nm.value = localStorage.getItem('hr_name') || ''; } catch(e) {}
-  sv.onclick = () => saveScore(nm.value, { score, homers:hrCount, longest, mode });
+  sv.onclick = () => saveScore(nm.value, { score, homers:hrCount, longest, mode, team: uniform.id });
   nm.addEventListener('keydown', e => { if (e.key === 'Enter') sv.click(); });
   loadBoard($('lb'));
 }
@@ -283,21 +313,33 @@ function endGame(){
 const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let myId = null;
 
+let boardSort = 'score';   // 'score' | 'longest'
+const teamOf = id => UNIFORMS.find(u => u.id === id);
+const teamCell = id => { const t = teamOf(id); return t
+  ? `<span class="team"><i style="background:${t.body}${t.line ? ';box-shadow:inset 0 0 0 1px ' + t.line : ''}"></i>${t.short}</span>`
+  : '<span class="team none">-</span>'; };
+
+// 랭킹 패널: 제목 + 점수/비거리 탭 + 표 (결과 화면, 시작 화면 공용)
 async function loadBoard(el, limit = 10){
   if (!el) return;
-  const title = `🏆 ${M().name} 랭킹 TOP ${limit}`;
-  el.innerHTML = '<h3>' + title + '</h3><p class="msg">불러오는 중…</p>';
+  const head = `<div class="ph"><h3>🏆 ${M().name} 랭킹</h3><div class="tabs">
+      <button data-s="score" class="${boardSort==='score'?'on':''}">점수</button>
+      <button data-s="longest" class="${boardSort==='longest'?'on':''}">비거리</button></div></div>`;
+  const wire = () => el.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { boardSort = b.dataset.s; loadBoard(el, limit); });
+  el.innerHTML = head + '<div class="pb"><p class="msg">불러오는 중…</p></div>'; wire();
   try {
-    const r = await fetch('/api/scores?mode=' + mode + '&limit=' + limit);
+    const r = await fetch(`/api/scores?mode=${mode}&sort=${boardSort}&limit=${limit}`);
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || '');
-    const scores = j.scores || [];
+    const scores = j.scores || [], byDist = boardSort === 'longest';
+    const th = `<tr><th>#</th><th>팀</th><th>이름</th>${byDist ? '<th>비거리</th>' : '<th>홈런</th><th>점수</th>'}</tr>`;
     const rows = scores.length
-      ? scores.map((s,i) => `<tr class="${s.id===myId?'me':''}"><td>${i+1}</td><td>${esc(s.name)}</td><td>${s.homers}HR</td><td>${s.score.toLocaleString()}</td></tr>`).join('')
-      : '<tr><td colspan="4" style="text-align:center;color:#8fa0bb">아직 기록이 없어요</td></tr>';
-    el.innerHTML = `<h3>${title}</h3><table>${rows}</table>`;
+      ? scores.map((s,i) => `<tr class="${s.id===myId?'me':''}"><td>${i+1}</td><td>${teamCell(s.team)}</td><td class="nm">${esc(s.name)}</td>${
+          byDist ? `<td>${Number(s.longest).toFixed(1)}m</td>` : `<td>${s.homers}</td><td>${s.score.toLocaleString()}</td>`}</tr>`).join('')
+      : `<tr><td colspan="${byDist?4:5}" class="empty">아직 기록이 없어요</td></tr>`;
+    el.querySelector('.pb').innerHTML = `<table class="${byDist?'dist':'pts'}">${th}${rows}</table>`;
   } catch(e) {
-    el.innerHTML = '<h3>' + title + '</h3><p class="msg">' + esc(e.message || '랭킹 서버에 연결할 수 없어요') + '</p>';
+    el.querySelector('.pb').innerHTML = '<p class="msg">' + esc(e.message || '랭킹 서버에 연결할 수 없어요') + '</p>';
   }
 }
 
@@ -330,11 +372,11 @@ function showTitle(){
     </div>
     <p class="modeinfo" id="modeinfo"></p>
     <div class="opt"><span class="ol">유니폼</span>
-      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.stripe ? `repeating-linear-gradient(90deg, ${u.body} 0 5px, ${u.stripe} 5px 6px)` : u.accent ? `linear-gradient(135deg, ${u.body} 50%, ${u.accent} 50%)` : u.body}"></button>`).join('')}</div>
+      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.stripe ? `repeating-linear-gradient(90deg, ${u.body} 0 5px, ${u.stripe} 5px 6px)` : u.body}"></button>`).join('')}</div>
     </div>
     <p class="modeinfo" id="uname">${uniform.name}</p>
     <button id="go">경기 시작</button>
-    <div class="lb" id="lb" style="max-width:340px;margin:16px auto 0"></div>`;
+    <div class="panel solo" id="lb"></div>`;
   $('go').onclick = startGame;
   const info = { easy:'공이 느리고 타이밍 판정이 넉넉해요.', hard:'공이 빠르고 PERFECT 판정이 아주 좁아요.' };
   const refresh = () => {

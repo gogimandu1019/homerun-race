@@ -5,6 +5,8 @@ const MAX_SCORE = 320000;   // 15구 · 최대 비거리 · 2배 이벤트 5개�
 const TOTAL_PITCHES = 15;
 const MODES = ['easy', 'hard'];
 const pickMode = m => (MODES.includes(m) ? m : null);
+const TEAMS = ['kt', 'samsung', 'kia', 'lg', 'doosan', 'ssg', 'lotte', 'nc', 'hanwha', 'kiwoom'];
+const SORTS = { score: 'score.desc,created_at.asc', longest: 'longest.desc,created_at.asc' };
 
 // 화면에 보여줄 수 있는 오류 (비밀 값은 담지 않음)
 class ConfigError extends Error {}
@@ -34,7 +36,10 @@ function explain(status, text) {
   try { code = JSON.parse(text).code || ''; } catch (e) {}
   if (status === 401 || status === 403) return '서버 설정 오류: Supabase 키가 올바르지 않습니다. secret(service_role) 키인지 확인해 주세요.';
   if (code === 'PGRST205' || code === '42P01' || status === 404) return '서버 설정 오류: scores 테이블이 없습니다. Supabase SQL Editor에서 schema.sql을 실행해 주세요.';
-  if (code === '42703' || code === 'PGRST204') return '서버 설정 오류: scores 테이블에 mode 컬럼이 없습니다. Supabase SQL Editor에서 supabase/002_add_mode.sql을 실행해 주세요.';
+  if (code === '42703' || code === 'PGRST204') {
+    if (/team/.test(text)) return '서버 설정 오류: scores 테이블에 team 컬럼이 없습니다. Supabase SQL Editor에서 supabase/003_add_team.sql을 실행해 주세요.';
+    return '서버 설정 오류: scores 테이블에 mode 컬럼이 없습니다. Supabase SQL Editor에서 supabase/002_add_mode.sql을 실행해 주세요.';
+  }
   return null;
 }
 
@@ -72,7 +77,9 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
       const mode = pickMode(req.query.mode) || 'easy';
-      const { data } = await supabase(`scores?select=id,name,score,homers,longest,mode,created_at&mode=eq.${mode}&order=score.desc,created_at.asc&limit=${limit}`);
+      const sort = SORTS[req.query.sort] ? req.query.sort : 'score';
+      const extra = sort === 'longest' ? '&longest=gt.0' : '';
+      const { data } = await supabase(`scores?select=id,name,score,homers,longest,mode,team,created_at&mode=eq.${mode}${extra}&order=${SORTS[sort]}&limit=${limit}`);
       return res.status(200).json({ scores: data || [] });
     }
 
@@ -82,6 +89,7 @@ module.exports = async function handler(req, res) {
       const name = cleanName(body.name);
       const score = Number(body.score), homers = Number(body.homers), longest = Number(body.longest);
       const mode = pickMode(body.mode);
+      const team = TEAMS.includes(body.team) ? body.team : null;
       if (!name) return res.status(400).json({ error: '이름을 1~12자로 입력해 주세요.' });
       if (!mode) return res.status(400).json({ error: '난이도 값이 올바르지 않습니다.' });
       if (!isInt(score, 0, MAX_SCORE)) return res.status(400).json({ error: '점수가 올바르지 않습니다.' });
@@ -92,7 +100,7 @@ module.exports = async function handler(req, res) {
       const { data } = await supabase('scores', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ name, score, homers, mode, longest: Math.round(longest * 10) / 10 }),
+        body: JSON.stringify({ name, score, homers, mode, team, longest: Math.round(longest * 10) / 10 }),
       });
       const row = Array.isArray(data) ? data[0] : data;
 
