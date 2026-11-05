@@ -80,6 +80,9 @@
   button.ghost { background:transparent; color:var(--text); border:1px solid #3a4866; }
   .tag { display:inline-block; font-size:12px; padding:2px 10px; border-radius:999px; background:#26324a; color:#c7d2e4; }
   .opt { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+  .jno { width:64px; font-size:16px; text-align:center; padding:6px 8px; border-radius:999px; border:1px solid #33415e; background:#0b1220; color:var(--text); font-weight:700; }
+  .jno::placeholder { color:#5d6b86; }
+  button.small { margin:0; font-size:13px; padding:6px 14px; }
   .ol { font-size:13px; color:var(--muted); width:44px; text-align:right; }
   .seg { display:inline-flex; background:#0b1220; border:1px solid #33415e; border-radius:999px; padding:3px; }
   .seg button { margin:0; font-size:15px; padding:7px 22px; background:transparent; color:var(--muted); }
@@ -168,6 +171,9 @@ const store = { get(k, d){ try { const v = localStorage.getItem(k); return v ===
 let mode = MODES[store.get('hr_mode','easy')] ? store.get('hr_mode','easy') : 'easy';
 let uniform = UNIFORMS.find(u => u.id === store.get('hr_uniform','')) || UNIFORMS[0];
 const M = () => MODES[mode];
+// 등번호: 비워두면 팀 기본 번호, 직접 입력하면 모든 팀에서 그 번호 (그래픽 전용, 이 브라우저에만 저장)
+let myNo = /^\d{1,2}$/.test(store.get('hr_no','')) ? store.get('hr_no','') : '';
+const jerseyNo = () => myNo !== '' ? myNo : String(uniform.no);
 
 let state = 'title', pitchIdx = 0, score = 0, hrCount = 0, results = [], eventSet = new Set();
 let pitch = null, flight = null, banner = null, swingT = -1, stateT = 0;
@@ -387,6 +393,10 @@ function showTitle(){
       <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.stripe ? `repeating-linear-gradient(90deg, ${u.body} 0 5px, ${u.stripe} 5px 6px)` : u.body}"></button>`).join('')}</div>
     </div>
     <p class="modeinfo" id="uname">${uniform.name}</p>
+    <div class="opt"><span class="ol">등번호</span>
+      <input id="jno" class="jno" inputmode="numeric" maxlength="2" value="${myNo}" placeholder="${uniform.no}" aria-label="등번호 (0~99)">
+      <button id="jnoReset" class="ghost small">팀 기본 번호</button>
+    </div>
     <button id="go">경기 시작</button>
     <div class="panel solo" id="lb"></div>`;
   $('go').onclick = startGame;
@@ -398,9 +408,15 @@ function showTitle(){
   };
   document.querySelectorAll('#modes button').forEach(b => b.onclick = () => { mode = b.dataset.m; store.set('hr_mode', mode); refresh(); });
   document.querySelectorAll('#sw button').forEach(b => b.onclick = () => {
-    uniform = UNIFORMS.find(u => u.id === b.dataset.u); store.set('hr_uniform', uniform.id); $('uname').textContent = uniform.name;
+    uniform = UNIFORMS.find(u => u.id === b.dataset.u); store.set('hr_uniform', uniform.id); $('uname').textContent = uniform.name; $('jno').placeholder = uniform.no;
     document.querySelectorAll('#sw button').forEach(x => x.classList.toggle('on', x === b));
   });
+  const jno = $('jno');
+  jno.addEventListener('input', () => {
+    jno.value = jno.value.replace(/\D/g, '').slice(0, 2);
+    myNo = jno.value; store.set('hr_no', myNo);
+  });
+  $('jnoReset').onclick = () => { jno.value = ''; myNo = ''; store.set('hr_no', ''); };
   refresh();
 }
 
@@ -518,7 +534,7 @@ function drawBatter(now){
     ctx.restore(); roundRect(-30, -110, 60, 115, 18);
   }
   if (uniform.line) { ctx.strokeStyle = uniform.line; ctx.lineWidth = 2; ctx.stroke(); }
-  ctx.fillStyle = uniform.num; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(String(uniform.no), 0, -45);
+  ctx.fillStyle = uniform.num; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(jerseyNo(), 0, -45);
   // 헬멧
   ctx.fillStyle = uniform.helmet; ctx.beginPath(); ctx.arc(4, -132, 26, Math.PI, 0); ctx.fill(); ctx.fillRect(-22, -134, 52, 12);
   // 배트
