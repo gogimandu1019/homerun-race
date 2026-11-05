@@ -1,0 +1,7 @@
+{
+  "name": "homerun-race",
+  "private": true,
+  "version": "1.0.0",
+  "description": "홈런레이스 - 타이밍 맞춰 홈런 치는 게임 + 랭킹",
+  "engines": { "node": ">=18" }
+}
