@@ -259,7 +259,6 @@ function showTitle(){
   $('card').innerHTML = `<h1>⚾ 홈런레이스</h1>
     <p>총 <b>${TOTAL}개</b>의 공이 날아옵니다. 그중 <b style="color:#ffc83d">${EVENTS}개는 점수 2배</b> 이벤트!</p>
     <p>홈런이면 <b>비거리(m) × 100점</b>, 홈런이 아니면 0점.</p>
-    <p><small>대구 삼성 라이온즈파크 규격 · 좌우 99.5m · 좌·우중간 107m · 중앙 122.5m · 펜스 높이 3.6m</small></p>
     <button id="go">경기 시작</button>
     <div class="lb" id="lb" style="max-width:340px;margin:16px auto 0"></div>`;
   $('go').onclick = startGame;
@@ -427,8 +426,6 @@ function drawField(){
   [[-45,'99.5m'],[-22.5,'107m'],[0,'122.5m'],[22.5,'107m'],[45,'99.5m']].forEach(([d,t]) => { const p = fp(fenceDist(d)+8, d); ctx.fillText(t, p.x, p.y); });
   // 홈플레이트
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(HX, HY, 3, 0, Math.PI*2); ctx.fill();
-  ctx.font = '12px sans-serif'; ctx.fillStyle = '#8fa0bb'; ctx.textAlign = 'left';
-  ctx.fillText('대구 삼성 라이온즈파크 · 좌우 99.5m · 좌우중간 107m · 중앙 122.5m · 펜스 3.6m', 16, H-12);
   // 이전 홈런 낙구 지점
   results.forEach(r => { if (r && r.homer && r.land) { ctx.fillStyle = r.ev ? 'rgba(255,200,61,.6)' : 'rgba(255,255,255,.45)'; ctx.beginPath(); ctx.arc(r.land.x, r.land.y, 3, 0, Math.PI*2); ctx.fill(); } });
 }
