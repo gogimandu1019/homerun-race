@@ -150,18 +150,18 @@ const MODES = {
   hard: { name:'하드', slow:1.7, kmh:[130,155], q:110, perfect:14, good:38, v0:104, vq:84, lsd:6 },
 };
 // 유니폼 팀: 실제 구단명·로고 대신 지역+닉네임을 씁니다 (id는 DB에 저장되는 내부 코드라 바꾸지 않음)
-// body=상의, num=등번호, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
+// no=등번호(그래픽 전용), body=상의, num=등번호 색, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
 const UNIFORMS = [
-  { id:'kt', name:'수원 마법사', short:'마법사',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'samsung', name:'대구 사자', short:'사자', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
-  { id:'kia', name:'광주 호랑이', short:'호랑이',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'lg', name:'서울 쌍둥이', short:'쌍둥이',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
-  { id:'doosan', name:'서울 곰돌이', short:'곰돌이',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
-  { id:'ssg', name:'인천 강아지', short:'강아지',    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422' },
-  { id:'lotte', name:'부산 갈매기', short:'갈매기', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
-  { id:'nc', name:'창원 공룡', short:'공룡',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
-  { id:'hanwha', name:'대전 독수리', short:'독수리',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'kiwoom', name:'서울 영웅', short:'영웅', body:'#820024', num:'#ffffff', helmet:'#820024' },
+  { id:'kt', name:'수원 마법사', short:'마법사', no:6,       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'samsung', name:'대구 사자', short:'사자', no:36, body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'kia', name:'광주 호랑이', short:'호랑이', no:7,  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'lg', name:'서울 쌍둥이', short:'쌍둥이', no:33,     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
+  { id:'doosan', name:'서울 곰돌이', short:'곰돌이', no:31,   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
+  { id:'ssg', name:'인천 강아지', short:'강아지', no:14,    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422' },
+  { id:'lotte', name:'부산 갈매기', short:'갈매기', no:10, body:'#041e42', num:'#ffffff', helmet:'#041e42' },
+  { id:'nc', name:'창원 공룡', short:'공룡', no:2,   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
+  { id:'hanwha', name:'대전 독수리', short:'독수리', no:52,   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'kiwoom', name:'서울 영웅', short:'영웅', no:51, body:'#820024', num:'#ffffff', helmet:'#820024' },
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
@@ -518,7 +518,7 @@ function drawBatter(now){
     ctx.restore(); roundRect(-30, -110, 60, 115, 18);
   }
   if (uniform.line) { ctx.strokeStyle = uniform.line; ctx.lineWidth = 2; ctx.stroke(); }
-  ctx.fillStyle = uniform.num; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('25', 0, -45);
+  ctx.fillStyle = uniform.num; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(String(uniform.no), 0, -45);
   // 헬멧
   ctx.fillStyle = uniform.helmet; ctx.beginPath(); ctx.arc(4, -132, 26, Math.PI, 0); ctx.fill(); ctx.fillRect(-22, -134, 52, 12);
   // 배트
