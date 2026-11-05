@@ -53,8 +53,8 @@
   .seg button { margin:0; font-size:15px; padding:7px 22px; background:transparent; color:var(--muted); }
   .seg button.on { background:var(--gold); color:#1a1300; }
   .modeinfo { font-size:13px; color:var(--muted) !important; margin:6px 0 0 !important; min-height:20px; }
-  .sw { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-  .sw button { margin:0; width:30px; height:30px; padding:0; border-radius:50%; border:2px solid rgba(255,255,255,.25); }
+  .sw { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:420px; }
+  .sw button { margin:0; width:30px; height:30px; flex:none; padding:0; border-radius:50%; border:2px solid rgba(255,255,255,.25); }
   .sw button.on { outline:3px solid var(--gold); outline-offset:2px; }
   #ad { width:100%; max-width:960px; margin-top:28px; min-height:0; text-align:center; }
   #ad:empty { display:none; }
@@ -121,21 +121,24 @@ const MODES = {
   easy: { name:'이지', slow:2.6, kmh:[115,140], q:180, perfect:30, good:70, v0:110, vq:78, lsd:4.5 },
   hard: { name:'하드', slow:1.7, kmh:[130,155], q:110, perfect:14, good:38, v0:100, vq:84, lsd:6 },
 };
-// 유니폼 색상
+// 유니폼 색상 (KBO 10개 구단 컬러 기준 · 로고/엠블럼은 쓰지 않음)
+// body=상의, num=등번호, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
 const UNIFORMS = [
-  { id:'navy',   name:'네이비', body:'#0d2a5c', num:'#e6eaf2' },
-  { id:'red',    name:'레드',   body:'#b3202a', num:'#ffffff' },
-  { id:'blue',   name:'블루',   body:'#1d5fd1', num:'#ffffff' },
-  { id:'black',  name:'블랙',   body:'#1b1b1f', num:'#ffc83d' },
-  { id:'white',  name:'화이트', body:'#f1f3f7', num:'#13306b' },
-  { id:'green',  name:'그린',   body:'#1e7a46', num:'#ffffff' },
-  { id:'purple', name:'퍼플',   body:'#5b2a86', num:'#ffffff' },
-  { id:'orange', name:'오렌지', body:'#e2661b', num:'#1a1300' },
+  { id:'hanwha',  name:'한화 이글스',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'kt',      name:'KT 위즈',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'ssg',     name:'SSG 랜더스',    body:'#00704a', num:'#ffffff', helmet:'#00704a' },
+  { id:'lg',      name:'LG 트윈스',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
+  { id:'doosan',  name:'두산 베어스',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
+  { id:'kiwoom',  name:'키움 히어로즈', body:'#820024', num:'#ffffff', helmet:'#820024' },
+  { id:'kia',     name:'KIA 타이거즈',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'samsung', name:'삼성 라이온즈', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'lotte',   name:'롯데 자이언츠', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
+  { id:'nc',      name:'NC 다이노스',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
 let mode = MODES[store.get('hr_mode','easy')] ? store.get('hr_mode','easy') : 'easy';
-let uniform = UNIFORMS.find(u => u.id === store.get('hr_uniform','navy')) || UNIFORMS[0];
+let uniform = UNIFORMS.find(u => u.id === store.get('hr_uniform','')) || UNIFORMS[0];
 const M = () => MODES[mode];
 
 let state = 'title', pitchIdx = 0, score = 0, hrCount = 0, results = [], eventSet = new Set();
@@ -327,8 +330,9 @@ function showTitle(){
     </div>
     <p class="modeinfo" id="modeinfo"></p>
     <div class="opt"><span class="ol">유니폼</span>
-      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.body}"></button>`).join('')}</div>
+      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.stripe ? `repeating-linear-gradient(90deg, ${u.body} 0 5px, ${u.stripe} 5px 6px)` : u.body}"></button>`).join('')}</div>
     </div>
+    <p class="modeinfo" id="uname">${uniform.name}</p>
     <button id="go">경기 시작</button>
     <div class="lb" id="lb" style="max-width:340px;margin:16px auto 0"></div>`;
   $('go').onclick = startGame;
@@ -340,7 +344,7 @@ function showTitle(){
   };
   document.querySelectorAll('#modes button').forEach(b => b.onclick = () => { mode = b.dataset.m; store.set('hr_mode', mode); refresh(); });
   document.querySelectorAll('#sw button').forEach(b => b.onclick = () => {
-    uniform = UNIFORMS.find(u => u.id === b.dataset.u); store.set('hr_uniform', uniform.id);
+    uniform = UNIFORMS.find(u => u.id === b.dataset.u); store.set('hr_uniform', uniform.id); $('uname').textContent = uniform.name;
     document.querySelectorAll('#sw button').forEach(x => x.classList.toggle('on', x === b));
   });
   refresh();
@@ -454,10 +458,15 @@ function drawBatter(now){
   ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-24, 110); ctx.moveTo(14, 0); ctx.lineTo(36, 110); ctx.stroke();
   // 몸
   ctx.fillStyle = uniform.body; roundRect(-30, -110, 60, 115, 18); ctx.fill();
-  if (uniform.id === 'white') { ctx.strokeStyle = '#9aa6bd'; ctx.lineWidth = 2; ctx.stroke(); }
+  if (uniform.stripe) {   // 핀스트라이프
+    ctx.save(); ctx.clip(); ctx.fillStyle = uniform.stripe;
+    for (let x = -28; x < 30; x += 8) ctx.fillRect(x, -110, 1.6, 115);
+    ctx.restore(); roundRect(-30, -110, 60, 115, 18);
+  }
+  if (uniform.line) { ctx.strokeStyle = uniform.line; ctx.lineWidth = 2; ctx.stroke(); }
   ctx.fillStyle = uniform.num; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('25', 0, -45);
   // 헬멧
-  ctx.fillStyle = uniform.id === 'white' ? '#13306b' : uniform.body; ctx.beginPath(); ctx.arc(4, -132, 26, Math.PI, 0); ctx.fill(); ctx.fillRect(-22, -134, 52, 12);
+  ctx.fillStyle = uniform.helmet; ctx.beginPath(); ctx.arc(4, -132, 26, Math.PI, 0); ctx.fill(); ctx.fillRect(-22, -134, 52, 12);
   // 배트
   const ang = -2.3 + sw * 3.3;
   ctx.translate(18, -82); ctx.rotate(ang);
