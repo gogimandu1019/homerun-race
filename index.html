@@ -51,11 +51,14 @@
   .pb td { height:30px; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .pb th:first-child, .pb td:first-child { width:40px; text-align:center; padding:0 4px; }
   .pb th:last-child, .pb td:last-child { text-align:right; }
-  .pb table.pts th:nth-child(2), .pb table.dist th:nth-child(2) { width:64px; }
+  .pb table.pts th:nth-child(2), .pb table.dist th:nth-child(2) { width:84px; }
   .pb table.pts th:nth-child(4) { width:46px; } .pb table.pts td:nth-child(4) { text-align:right; } .pb table.pts th:nth-child(4) { text-align:right; }
   .pb table.pts th:last-child { width:80px; } .pb table.dist th:last-child { width:80px; }
   .pb table.mine th:nth-child(3) { width:72px; } .pb table.mine th:last-child { width:80px; }
   .pb table.mine td:nth-child(3), .pb table.mine th:nth-child(3) { text-align:right; }
+  .pb table.teams th:nth-child(3), .pb table.teams td:nth-child(3) { width:40px; text-align:right; }
+  .pb table.teams th:nth-child(4), .pb table.teams td:nth-child(4) { width:46px; text-align:right; }
+  .pb table.teams th:last-child { width:96px; }
   .pb tr.me td, .pb table.mine tr.hr td { color:var(--gold); font-weight:700; }
   .pb .empty { text-align:center !important; color:var(--muted); height:60px; }
   .endh { display:flex; align-items:center; justify-content:center; gap:10px; font-size:28px !important; margin:0 !important; }
@@ -130,16 +133,12 @@ const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const W = cv.width, H = cv.height;
 const $ = id => document.getElementById(id);
 
-// ===== 대구 삼성 라이온즈파크 규격 (팔각형 구장: 펜스가 직선 구간으로 이어짐) =====
-const PARK = { line:99.5, gap:107, center:122.5, fence:3.6 };
-const CORNERS = [[-45,PARK.line],[-22.5,PARK.gap],[0,PARK.center],[22.5,PARK.gap],[45,PARK.line]];
+const PARK = { line:100, center:122, fence:3.6 };
+// 둥근 외야 펜스: 파울라인 100m → 중앙 122m로 부드럽게 이어지는 곡선 (좌·우중간 약 113m)
 // 방향각(도): 0 = 중앙, -45 = 좌측 파울라인, +45 = 우측 파울라인
 function fenceDist(deg){
-  const th = clamp(deg,-45,45)*Math.PI/180, dx = Math.sin(th), dy = Math.cos(th);
-  let k = 0; while (k < CORNERS.length-2 && deg > CORNERS[k+1][0]) k++;
-  const P = ([d,r]) => [r*Math.sin(d*Math.PI/180), r*Math.cos(d*Math.PI/180)];
-  const [ax,ay] = P(CORNERS[k]), [bx,by] = P(CORNERS[k+1]), ex = bx-ax, ey = by-ay;
-  return (ax*ey - ay*ex) / (dx*ey - dy*ex);   // 방향 반직선과 펜스 직선의 교점 거리
+  const t = Math.cos(clamp(Math.abs(deg), 0, 45) * 2 * Math.PI / 180);   // 중앙 1 → 파울라인 0
+  return PARK.line + (PARK.center - PARK.line) * Math.pow(Math.max(0, t), 1.5);
 }
 
 // ===== 게임 상수 =====
@@ -147,22 +146,22 @@ const TOTAL = 15, EVENTS = 5;
 const WINDOW = 150;        // 스윙 가능 범위 (ms, 도착 시점 기준 ±)
 // 난이도별 설정: slow=투구 감속 배율(클수록 느림), q=타이밍 허용 폭, perfect/good=판정 범위(ms)
 const MODES = {
-  easy: { name:'이지', slow:2.6, kmh:[115,140], q:180, perfect:30, good:70, v0:110, vq:78, lsd:4.5 },
-  hard: { name:'하드', slow:1.7, kmh:[130,155], q:110, perfect:14, good:38, v0:100, vq:84, lsd:6 },
+  easy: { name:'이지', slow:2.6, kmh:[115,140], q:180, perfect:30, good:70, v0:114, vq:78, lsd:4.5 },
+  hard: { name:'하드', slow:1.7, kmh:[130,155], q:110, perfect:14, good:38, v0:104, vq:84, lsd:6 },
 };
-// 유니폼 색상 (KBO 10개 구단 컬러 · 2026 정규시즌 최종순위 순 · 로고/엠블럼은 쓰지 않음)
+// 유니폼 팀: 실제 구단명·로고 대신 지역+닉네임을 씁니다 (id는 DB에 저장되는 내부 코드라 바꾸지 않음)
 // body=상의, num=등번호, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
 const UNIFORMS = [
-  { id:'kt',      name:'KT 위즈', short:'KT',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'samsung', name:'삼성 라이온즈', short:'삼성', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
-  { id:'kia',     name:'KIA 타이거즈', short:'KIA',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'lg',      name:'LG 트윈스', short:'LG',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
-  { id:'doosan',  name:'두산 베어스', short:'두산',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
-  { id:'ssg',     name:'SSG 랜더스', short:'SSG',    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422' },
-  { id:'lotte',   name:'롯데 자이언츠', short:'롯데', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
-  { id:'nc',      name:'NC 다이노스', short:'NC',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
-  { id:'hanwha',  name:'한화 이글스', short:'한화',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'kiwoom',  name:'키움 히어로즈', short:'키움', body:'#820024', num:'#ffffff', helmet:'#820024' },
+  { id:'kt', name:'수원 마법사', short:'마법사',       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'samsung', name:'대구 사자', short:'사자', body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'kia', name:'광주 호랑이', short:'호랑이',  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'lg', name:'서울 쌍둥이', short:'쌍둥이',     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
+  { id:'doosan', name:'서울 곰돌이', short:'곰돌이',   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
+  { id:'ssg', name:'인천 강아지', short:'강아지',    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422' },
+  { id:'lotte', name:'부산 갈매기', short:'갈매기', body:'#041e42', num:'#ffffff', helmet:'#041e42' },
+  { id:'nc', name:'창원 공룡', short:'공룡',   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
+  { id:'hanwha', name:'대전 독수리', short:'독수리',   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
+  { id:'kiwoom', name:'서울 영웅', short:'영웅', body:'#820024', num:'#ffffff', helmet:'#820024' },
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
@@ -313,7 +312,7 @@ function endGame(){
 const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let myId = null;
 
-let boardSort = 'score';   // 'score' | 'longest'
+let boardSort = 'score';   // 'score' | 'longest' | 'teams'
 const teamOf = id => UNIFORMS.find(u => u.id === id);
 const teamCell = id => { const t = teamOf(id); return t
   ? `<span class="team"><i style="background:${t.body}${t.line ? ';box-shadow:inset 0 0 0 1px ' + t.line : ''}"></i>${t.short}</span>`
@@ -324,10 +323,23 @@ async function loadBoard(el, limit = 10){
   if (!el) return;
   const head = `<div class="ph"><h3>🏆 ${M().name} 랭킹</h3><div class="tabs">
       <button data-s="score" class="${boardSort==='score'?'on':''}">점수</button>
-      <button data-s="longest" class="${boardSort==='longest'?'on':''}">비거리</button></div></div>`;
+      <button data-s="longest" class="${boardSort==='longest'?'on':''}">비거리</button>
+      <button data-s="teams" class="${boardSort==='teams'?'on':''}">팀</button></div></div>`;
   const wire = () => el.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { boardSort = b.dataset.s; loadBoard(el, limit); });
   el.innerHTML = head + '<div class="pb"><p class="msg">불러오는 중…</p></div>'; wire();
   try {
+    if (boardSort === 'teams') {
+      const r = await fetch(`/api/scores?mode=${mode}&view=teams`);
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || '');
+      const teams = j.teams || [];
+      const mine = uniform.id;
+      const rows = teams.length
+        ? teams.map((t,i) => { const u = teamOf(t.team) || {}; return `<tr class="${t.team===mine?'me':''}"><td>${i+1}</td><td>${teamCell(t.team).replace(u.short || '', u.name || u.short || '')}</td><td>${t.games}</td><td>${t.homers}</td><td>${Number(t.total).toLocaleString()}</td></tr>`; }).join('')
+        : '<tr><td colspan="5" class="empty">아직 기록이 없어요</td></tr>';
+      el.querySelector('.pb').innerHTML = `<table class="teams"><tr><th>#</th><th>팀</th><th>판</th><th>홈런</th><th>총점</th></tr>${rows}</table>`;
+      return;
+    }
     const r = await fetch(`/api/scores?mode=${mode}&sort=${boardSort}&limit=${limit}`);
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || '');
@@ -554,9 +566,8 @@ function drawField(){
   ctx.strokeStyle = '#1b5fa8'; ctx.lineWidth = 6; ctx.beginPath();
   for (let d=-45; d<=45; d+=0.5) { const p = fp(fenceDist(d), d); d===-45 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y); } ctx.stroke();
   ctx.strokeStyle = '#ffc83d'; ctx.lineWidth = 1.5; ctx.stroke();
-  // 거리 표시
+
   ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
-  [[-45,'99.5m'],[-22.5,'107m'],[0,'122.5m'],[22.5,'107m'],[45,'99.5m']].forEach(([d,t]) => { const p = fp(fenceDist(d)+8, d); ctx.fillText(t, p.x, p.y); });
   // 홈플레이트
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(HX, HY, 3, 0, Math.PI*2); ctx.fill();
   // 이전 홈런 낙구 지점

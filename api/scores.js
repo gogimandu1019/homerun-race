@@ -35,6 +35,7 @@ function explain(status, text) {
   let code = '';
   try { code = JSON.parse(text).code || ''; } catch (e) {}
   if (status === 401 || status === 403) return '서버 설정 오류: Supabase 키가 올바르지 않습니다. secret(service_role) 키인지 확인해 주세요.';
+  if ((code === 'PGRST205' || code === '42P01') && /team_standings/.test(text)) return '서버 설정 오류: 팀 순위 뷰가 없습니다. Supabase SQL Editor에서 supabase/004_team_standings.sql을 실행해 주세요.';
   if (code === 'PGRST205' || code === '42P01' || status === 404) return '서버 설정 오류: scores 테이블이 없습니다. Supabase SQL Editor에서 schema.sql을 실행해 주세요.';
   if (code === '42703' || code === 'PGRST204') {
     if (/team/.test(text)) return '서버 설정 오류: scores 테이블에 team 컬럼이 없습니다. Supabase SQL Editor에서 supabase/003_add_team.sql을 실행해 주세요.';
@@ -77,6 +78,10 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
       const mode = pickMode(req.query.mode) || 'easy';
+      if (req.query.view === 'teams') {
+        const { data } = await supabase(`team_standings?select=team,games,total,homers,longest,average&mode=eq.${mode}&order=total.desc`);
+        return res.status(200).json({ teams: data || [] });
+      }
       const sort = SORTS[req.query.sort] ? req.query.sort : 'score';
       const extra = sort === 'longest' ? '&longest=gt.0' : '';
       const { data } = await supabase(`scores?select=id,name,score,homers,longest,mode,team,created_at&mode=eq.${mode}${extra}&order=${SORTS[sort]}&limit=${limit}`);

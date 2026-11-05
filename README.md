@@ -1,6 +1,6 @@
 # ⚾ 홈런레이스
 
-타이밍 맞춰 클릭해서 홈런을 치는 게임입니다. 대구 삼성 라이온즈파크 규격을 쓰고,
+타이밍 맞춰 클릭해서 홈런을 치는 게임입니다. 외야는 파울라인 100m · 중앙 122m의 둥근 펜스(높이 3.6m)이고,
 15구 중 5구는 점수 2배 이벤트입니다. 이름과 점수는 Supabase에 저장되고 랭킹으로 보여요.
 
 ```
@@ -9,6 +9,7 @@ api/scores.js       Vercel 서버리스 함수: GET 랭킹 조회 / POST 점수 
 supabase/schema.sql 랭킹 테이블 생성 SQL (처음 만들 때)
 supabase/002_add_mode.sql  이지/하드 모드 컬럼 추가 (이미 테이블이 있을 때)
 supabase/003_add_team.sql  팀 컬럼 + 비거리 랭킹 인덱스 추가 (이미 테이블이 있을 때)
+supabase/004_team_standings.sql  팀별 순위 뷰 (+ 팀 없는 기존 기록을 한화로 합산)
 .env.example        필요한 환경변수 목록
 ```
 
@@ -37,7 +38,7 @@ vercel --prod
 ```
 
 ## 이미 테이블을 만들었다면 (이지/하드 모드 업데이트)
-Supabase **SQL Editor**에서 `supabase/002_add_mode.sql`, `supabase/003_add_team.sql`을 순서대로 한 번씩 실행하세요. 기존 기록은 이지 모드·팀 없음으로 들어갑니다.
+Supabase **SQL Editor**에서 `supabase/002_add_mode.sql`, `003_add_team.sql`, `004_team_standings.sql`을 순서대로 한 번씩 실행하세요. 기존 기록은 이지 모드·팀 없음으로 들어갑니다.
 
 ## 광고 (구글 애드센스)
 1. 내 도메인을 Vercel에 연결하고 애드센스 승인을 받습니다.
