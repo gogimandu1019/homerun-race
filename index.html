@@ -223,14 +223,15 @@ async function loadBoard(el, limit = 10){
   el.innerHTML = '<h3>🏆 랭킹 TOP ' + limit + '</h3><p class="msg">불러오는 중…</p>';
   try {
     const r = await fetch('/api/scores?limit=' + limit);
-    if (!r.ok) throw new Error();
-    const { scores } = await r.json();
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || '');
+    const scores = j.scores || [];
     const rows = scores.length
       ? scores.map((s,i) => `<tr class="${s.id===myId?'me':''}"><td>${i+1}</td><td>${esc(s.name)}</td><td>${s.homers}HR</td><td>${s.score.toLocaleString()}</td></tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center;color:#8fa0bb">아직 기록이 없어요</td></tr>';
     el.innerHTML = `<h3>🏆 랭킹 TOP ${limit}</h3><table>${rows}</table>`;
   } catch(e) {
-    el.innerHTML = '<h3>🏆 랭킹</h3><p class="msg">랭킹 서버에 연결할 수 없어요</p>';
+    el.innerHTML = '<h3>🏆 랭킹</h3><p class="msg">' + esc(e.message || '랭킹 서버에 연결할 수 없어요') + '</p>';
   }
 }
 
@@ -245,7 +246,7 @@ async function saveScore(name, data){
     if (!r.ok) throw new Error(j.error || '저장에 실패했어요.');
     try { localStorage.setItem('hr_name', name); } catch(e) {}
     myId = j.saved && j.saved.id;
-    msg.innerHTML = `저장 완료! 현재 <b style="color:#ffc83d">${j.rank}위</b>`;
+    msg.innerHTML = j.rank ? `저장 완료! 현재 <b style="color:#ffc83d">${j.rank}위</b>` : '저장 완료!';
     $('nm').disabled = true; sv.textContent = '저장됨';
     loadBoard($('lb'));
   } catch(e) {

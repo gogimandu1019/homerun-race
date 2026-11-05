@@ -13,9 +13,11 @@ supabase/schema.sql 랭킹 테이블 생성 SQL
 ## 1. Supabase 준비
 1. https://supabase.com 에서 새 프로젝트를 만듭니다.
 2. **SQL Editor**에 `supabase/schema.sql` 내용을 붙여넣고 **Run**.
-3. **Project Settings → API**에서 두 값을 복사해 둡니다.
-   - Project URL → `SUPABASE_URL`
-   - `service_role` 키 → `SUPABASE_SERVICE_ROLE_KEY` (⚠️ 절대 브라우저 코드나 깃에 넣지 마세요)
+3. 두 값을 복사해 둡니다.
+   - **Project Settings → Data API**의 Project URL (`https://xxxx.supabase.co`) → `SUPABASE_URL`
+   - **Project Settings → API Keys**의 **secret** 키(`sb_secret_…`) 또는 Legacy 탭의 `service_role` 키 → `SUPABASE_SERVICE_ROLE_KEY`
+     (⚠️ `sb_publishable_…`/`anon` 키는 안 됩니다. 비밀 키는 절대 브라우저 코드나 깃에 넣지 마세요)
+4. Vercel에서 환경변수를 추가·수정했다면 **Redeploy** 해야 반영됩니다.
 
 ## 2. Vercel 배포
 **방법 A — GitHub 연동 (추천)**

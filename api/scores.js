@@ -1,25 +1,59 @@
 // Vercel 서버리스 함수: GET /api/scores (랭킹 조회), POST /api/scores (점수 저장)
-// Supabase service_role 키는 서버에만 두고, 브라우저에는 절대 노출하지 않습니다.
+// Supabase 비밀 키(service_role 또는 sb_secret_…)는 서버에만 두고, 브라우저에는 절대 노출하지 않습니다.
 
 const MAX_SCORE = 320000;   // 15구 · 최대 비거리 · 2배 이벤트 5개를 감안한 이론상 상한
 const TOTAL_PITCHES = 15;
 
+// 화면에 보여줄 수 있는 오류 (비밀 값은 담지 않음)
+class ConfigError extends Error {}
+
 function env() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 환경변수가 없습니다.');
-  return { url: url.replace(/\/$/, ''), key };
+  const rawUrl = (process.env.SUPABASE_URL || '').trim();
+  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim();
+  if (!rawUrl) throw new ConfigError('서버 설정 오류: SUPABASE_URL 환경변수가 없습니다. (Vercel에 추가한 뒤 Redeploy 필요)');
+  if (!key) throw new ConfigError('서버 설정 오류: SUPABASE_SERVICE_ROLE_KEY 환경변수가 없습니다. (Vercel에 추가한 뒤 Redeploy 필요)');
+  if (key.startsWith('sb_publishable_')) throw new ConfigError('서버 설정 오류: publishable 키가 들어가 있습니다. secret 키(sb_secret_…) 또는 service_role 키를 넣어 주세요.');
+  // "https://xxx.supabase.co/rest/v1/" 처럼 넣은 경우도 허용
+  const url = rawUrl.replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+  if (!/^https?:\/\//.test(url)) throw new ConfigError('서버 설정 오류: SUPABASE_URL은 https://로 시작하는 Project URL이어야 합니다.');
+  return { url, key };
+}
+
+// 예전 키(JWT, eyJ…)는 Authorization 헤더에도 넣고,
+// 새 형식 키(sb_secret_…)는 JWT가 아니므로 apikey 헤더에만 넣습니다.
+function authHeaders(key) {
+  const h = { apikey: key };
+  if (key.startsWith('eyJ')) h.Authorization = `Bearer ${key}`;
+  return h;
+}
+
+function explain(status, text) {
+  let code = '';
+  try { code = JSON.parse(text).code || ''; } catch (e) {}
+  if (status === 401 || status === 403) return '서버 설정 오류: Supabase 키가 올바르지 않습니다. secret(service_role) 키인지 확인해 주세요.';
+  if (code === 'PGRST205' || code === '42P01' || status === 404) return '서버 설정 오류: scores 테이블이 없습니다. Supabase SQL Editor에서 schema.sql을 실행해 주세요.';
+  if (code === '42703' || code === 'PGRST204') return '서버 설정 오류: scores 테이블 컬럼이 다릅니다. schema.sql로 다시 만들어 주세요.';
+  return null;
 }
 
 async function supabase(path, init = {}) {
   const { url, key } = env();
-  const res = await fetch(`${url}/rest/v1/${path}`, {
-    ...init,
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
-  });
+  let res;
+  try {
+    res = await fetch(`${url}/rest/v1/${path}`, {
+      ...init,
+      headers: { ...authHeaders(key), 'Content-Type': 'application/json', ...(init.headers || {}) },
+    });
+  } catch (e) {
+    throw new ConfigError('서버 설정 오류: Supabase에 연결할 수 없습니다. SUPABASE_URL을 확인해 주세요.');
+  }
   const text = await res.text();
-  if (!res.ok) throw new Error(`Supabase ${res.status}: ${text}`);
-  return text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    console.error(`Supabase ${res.status}: ${text}`);
+    const msg = explain(res.status, text);
+    throw msg ? new ConfigError(msg) : new Error(`Supabase ${res.status}`);
+  }
+  return { data: text ? JSON.parse(text) : null, headers: res.headers };
 }
 
 function cleanName(raw) {
@@ -35,12 +69,13 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
-      const rows = await supabase(`scores?select=id,name,score,homers,longest,created_at&order=score.desc,created_at.asc&limit=${limit}`);
-      return res.status(200).json({ scores: rows });
+      const { data } = await supabase(`scores?select=id,name,score,homers,longest,created_at&order=score.desc,created_at.asc&limit=${limit}`);
+      return res.status(200).json({ scores: data || [] });
     }
 
     if (req.method === 'POST') {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+      let body = req.body || {};
+      if (typeof body === 'string') { try { body = JSON.parse(body || '{}'); } catch (e) { body = {}; } }
       const name = cleanName(body.name);
       const score = Number(body.score), homers = Number(body.homers), longest = Number(body.longest);
       if (!name) return res.status(400).json({ error: '이름을 1~12자로 입력해 주세요.' });
@@ -49,13 +84,21 @@ module.exports = async function handler(req, res) {
       if (!(longest >= 0 && longest <= 200)) return res.status(400).json({ error: '비거리가 올바르지 않습니다.' });
       if (homers === 0 && score > 0) return res.status(400).json({ error: '점수가 올바르지 않습니다.' });
 
-      const [row] = await supabase('scores', {
+      const { data } = await supabase('scores', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify({ name, score, homers, longest: Math.round(longest * 10) / 10 }),
       });
-      // 이번 점수의 순위 (나보다 높은 점수 수 + 1)
-      const rank = await countAbove(score);
+      const row = Array.isArray(data) ? data[0] : data;
+
+      // 이번 점수의 순위 = 나보다 높은 점수 수 + 1 (실패해도 저장은 성공으로 처리)
+      let rank = null;
+      try {
+        const { headers } = await supabase(`scores?select=id&score=gt.${score}&limit=1`, { headers: { Prefer: 'count=exact' } });
+        const total = parseInt((headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
+        rank = total + 1;
+      } catch (e) { console.error('rank 계산 실패', e); }
+
       return res.status(201).json({ saved: row, rank });
     }
 
@@ -63,16 +106,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: '랭킹 서버 오류가 발생했습니다.' });
+    const message = err instanceof ConfigError ? err.message : '랭킹 서버 오류가 발생했습니다.';
+    return res.status(500).json({ error: message });
   }
 };
-
-async function countAbove(score) {
-  const { url, key } = env();
-  const r = await fetch(`${url}/rest/v1/scores?select=id&score=gt.${score}`, {
-    method: 'HEAD',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: 'count=exact' },
-  });
-  const range = r.headers.get('content-range') || '*/0';   // 예: "0-4/5" 또는 "*/0"
-  return (parseInt(range.split('/')[1], 10) || 0) + 1;
-}
