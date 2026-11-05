@@ -6,7 +6,8 @@
 ```
 index.html          게임 (정적 페이지)
 api/scores.js       Vercel 서버리스 함수: GET 랭킹 조회 / POST 점수 저장
-supabase/schema.sql 랭킹 테이블 생성 SQL
+supabase/schema.sql 랭킹 테이블 생성 SQL (처음 만들 때)
+supabase/002_add_mode.sql  이지/하드 모드 컬럼 추가 (이미 테이블이 있을 때)
 .env.example        필요한 환경변수 목록
 ```
 
@@ -33,6 +34,16 @@ vercel env add SUPABASE_URL
 vercel env add SUPABASE_SERVICE_ROLE_KEY
 vercel --prod
 ```
+
+## 이미 테이블을 만들었다면 (이지/하드 모드 업데이트)
+Supabase **SQL Editor**에서 `supabase/002_add_mode.sql`을 한 번 실행하세요. 기존 기록은 이지 모드로 들어갑니다.
+
+## 광고 (구글 애드센스)
+1. 내 도메인을 Vercel에 연결하고 애드센스 승인을 받습니다.
+2. `index.html`에서 `const ADSENSE = { client: '', slot: '' };`에 게시자 ID(`ca-pub-…`)와 광고 단위 ID를 넣습니다.
+3. 프로젝트 루트에 `ads.txt`를 만들고 애드센스가 알려주는 한 줄을 넣습니다.
+   예: `google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0`
+4. 광고는 게임 화면 아래에만 표시됩니다 (게임 중 실수 클릭 방지). ID를 비워두면 광고가 나오지 않습니다.
 
 ## 로컬 실행
 `.env.example`을 `.env.local`로 복사해 값을 채운 뒤:

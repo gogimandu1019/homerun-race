@@ -7,10 +7,11 @@ create table if not exists public.scores (
   score       integer     not null check (score between 0 and 320000),
   homers      smallint    not null check (homers between 0 and 15),
   longest     real        not null default 0 check (longest between 0 and 200),
+  mode        text        not null default 'easy' check (mode in ('easy', 'hard')),
   created_at  timestamptz not null default now()
 );
 
-create index if not exists scores_score_idx on public.scores (score desc, created_at asc);
+create index if not exists scores_mode_score_idx on public.scores (mode, score desc, created_at asc);
 
 -- RLS를 켜고 정책은 만들지 않습니다.
 -- → 브라우저(anon 키)로는 읽기·쓰기 불가, Vercel API(service_role 키)만 접근 가능.

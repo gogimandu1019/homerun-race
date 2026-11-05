@@ -45,6 +45,19 @@
   .lb td:last-child, .lb th:last-child { text-align:right; }
   .row { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
   .row > div { flex:1 1 220px; min-width:0; }
+  button.ghost { background:transparent; color:var(--text); border:1px solid #3a4866; }
+  .tag { display:inline-block; font-size:12px; padding:2px 10px; border-radius:999px; background:#26324a; color:#c7d2e4; }
+  .opt { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+  .ol { font-size:13px; color:var(--muted); width:44px; text-align:right; }
+  .seg { display:inline-flex; background:#0b1220; border:1px solid #33415e; border-radius:999px; padding:3px; }
+  .seg button { margin:0; font-size:15px; padding:7px 22px; background:transparent; color:var(--muted); }
+  .seg button.on { background:var(--gold); color:#1a1300; }
+  .modeinfo { font-size:13px; color:var(--muted) !important; margin:6px 0 0 !important; min-height:20px; }
+  .sw { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .sw button { margin:0; width:30px; height:30px; padding:0; border-radius:50%; border:2px solid rgba(255,255,255,.25); }
+  .sw button.on { outline:3px solid var(--gold); outline-offset:2px; }
+  #ad { width:100%; max-width:960px; margin-top:28px; min-height:0; text-align:center; }
+  #ad:empty { display:none; }
   .help { color:var(--muted); font-size:13px; text-align:center; }
   @media (max-width:600px){ .stat{min-width:0; padding:6px 10px} .stat .v{font-size:17px} .card h1{font-size:26px} }
 </style>
@@ -54,13 +67,32 @@
   <div class="stat"><div class="k">점수</div><div class="v" id="score">0</div></div>
   <div class="stat"><div class="k">홈런</div><div class="v" id="hrs">0</div></div>
   <div id="balls"></div>
-  <div class="stat"><div class="k">최고 기록</div><div class="v" id="best">0</div></div>
+  <div class="stat"><div class="k" id="bestk">최고 기록</div><div class="v" id="best">0</div></div>
 </div>
 <div id="wrap">
   <canvas id="c" width="960" height="600"></canvas>
   <div id="overlay"><div class="card" id="card"></div></div>
 </div>
 <div class="help">공이 원 안으로 들어오는 순간 <b>클릭 / 탭 / 스페이스바</b>로 스윙! · 빠르면 좌측, 늦으면 우측으로 날아갑니다.</div>
+<!-- 광고: 게임 화면과 충분히 떨어진 아래쪽에만 둡니다 (실수 클릭 방지) -->
+<div id="ad"></div>
+<script>
+// ===== 광고 설정 =====
+// 애드센스 승인 후 게시자 ID(ca-pub-…)와 광고 단위 ID를 넣으면 광고가 켜집니다. 비워두면 광고 없음.
+const ADSENSE = { client: '', slot: '' };
+if (ADSENSE.client && ADSENSE.slot) {
+  const s = document.createElement('script');
+  s.async = true; s.crossOrigin = 'anonymous';
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADSENSE.client);
+  document.head.appendChild(s);
+  const ins = document.createElement('ins');
+  ins.className = 'adsbygoogle'; ins.style.display = 'block';
+  ins.dataset.adClient = ADSENSE.client; ins.dataset.adSlot = ADSENSE.slot;
+  ins.dataset.adFormat = 'auto'; ins.dataset.fullWidthResponsive = 'true';
+  document.getElementById('ad').appendChild(ins);
+  (window.adsbygoogle = window.adsbygoogle || []).push({});
+}
+</script>
 
 <script>
 (() => {
@@ -84,12 +116,32 @@ function fenceDist(deg){
 // ===== 게임 상수 =====
 const TOTAL = 15, EVENTS = 5;
 const WINDOW = 150;        // 스윙 가능 범위 (ms, 도착 시점 기준 ±)
-const SLOW = 2.2;          // 투구 속도 감속 배율 (게임성)
+// 난이도별 설정: slow=투구 감속 배율(클수록 느림), q=타이밍 허용 폭, perfect/good=판정 범위(ms)
+const MODES = {
+  easy: { name:'이지', slow:2.6, kmh:[115,140], q:180, perfect:30, good:70, v0:110, vq:78, lsd:4.5 },
+  hard: { name:'하드', slow:1.7, kmh:[130,155], q:110, perfect:14, good:38, v0:100, vq:84, lsd:6 },
+};
+// 유니폼 색상
+const UNIFORMS = [
+  { id:'navy',   name:'네이비', body:'#0d2a5c', num:'#e6eaf2' },
+  { id:'red',    name:'레드',   body:'#b3202a', num:'#ffffff' },
+  { id:'blue',   name:'블루',   body:'#1d5fd1', num:'#ffffff' },
+  { id:'black',  name:'블랙',   body:'#1b1b1f', num:'#ffc83d' },
+  { id:'white',  name:'화이트', body:'#f1f3f7', num:'#13306b' },
+  { id:'green',  name:'그린',   body:'#1e7a46', num:'#ffffff' },
+  { id:'purple', name:'퍼플',   body:'#5b2a86', num:'#ffffff' },
+  { id:'orange', name:'오렌지', body:'#e2661b', num:'#1a1300' },
+];
+const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
+                set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
+let mode = MODES[store.get('hr_mode','easy')] ? store.get('hr_mode','easy') : 'easy';
+let uniform = UNIFORMS.find(u => u.id === store.get('hr_uniform','navy')) || UNIFORMS[0];
+const M = () => MODES[mode];
 
 let state = 'title', pitchIdx = 0, score = 0, hrCount = 0, results = [], eventSet = new Set();
 let pitch = null, flight = null, banner = null, swingT = -1, stateT = 0;
-let best = 0; try { best = +localStorage.getItem('lionspark_hr_best') || 0; } catch(e) {}
-$('best').textContent = best.toLocaleString();
+let best = 0;
+function loadBest(){ best = +store.get('hr_best_' + mode, 0) || 0; $('best').textContent = best.toLocaleString(); $('bestk').textContent = `최고 기록 (${M().name})`; }
 
 const rand = (a,b) => a + Math.random()*(b-a);
 const gauss = () => { let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
@@ -136,8 +188,8 @@ function startGame(){
 }
 function nextPitch(){
   if (pitchIdx >= TOTAL) return endGame();
-  const kmh = Math.round(rand(118, 150));
-  const travel = 18.44/(kmh/3.6)*SLOW*1000;
+  const kmh = Math.round(rand(M().kmh[0], M().kmh[1]));
+  const travel = 18.44/(kmh/3.6)*M().slow*1000;
   pitch = {
     kmh, travel, ev: eventSet.has(pitchIdx),
     windup: rand(550, 1000),
@@ -160,15 +212,23 @@ function swing(){
   const e = el - pitch.travel;                     // + 늦음, - 빠름 (ms)
   if (Math.abs(e) > WINDOW) { pitch.whiff = true; pitch.err = e; return; }
   pitch.hit = true; pitch.err = e;
-  const ae = Math.abs(e);
-  const q = clamp(1 - Math.pow(ae/150, 1.4), 0, 1);  // 타이밍 품질
-  const kmh = clamp(106 + 80*q + gauss()*4, 70, 190);
-  let launch = 27 + gauss()*5;
+  const ae = Math.abs(e), m = M();
+  const q = clamp(1 - Math.pow(ae/m.q, 1.4), 0, 1);  // 타이밍 품질
+  let kmh = clamp(m.v0 + m.vq*q + gauss()*4, 70, 190);
+  let launch = 27 + gauss()*m.lsd;
   if (q < 0.8) launch += (Math.random()<0.5?-1:1) * (1-q) * rand(10, 30);
   launch = clamp(launch, -10, 70);
-  const spray = e*0.3 + gauss()*5;
-  const sim = simulate(kmh, launch, spray);
-  const label = ae <= 22 ? 'PERFECT!' : ae <= 55 ? 'GOOD' : (e < 0 ? '빠름' : '늦음');
+  let spray = e*0.3 + gauss()*5;
+  let sim = simulate(kmh, launch, spray);
+  const label = ae <= m.perfect ? 'PERFECT!' : ae <= m.good ? 'GOOD' : (e < 0 ? '빠름' : '늦음');
+  // PERFECT는 무조건 홈런: 홈런이 될 때까지 좋은 타구로 다시 굴림
+  if (label === 'PERFECT!') {
+    for (let i = 0; i < 30 && !sim.homer; i++) {
+      kmh = Math.max(kmh, rand(176, 188)); launch = rand(24, 32); spray = clamp(spray, -38, 38);
+      sim = simulate(kmh, launch, spray);
+    }
+    if (!sim.homer) { kmh = 186; launch = 28; spray = clamp(spray, -20, 20); sim = simulate(kmh, launch, spray); }
+  }
   pitch.result = { kmh, launch, spray, sim, label };
   setTimeout(() => { flight = { start: performance.now(), ...pitch.result }; setState('flight'); }, 180);
 }
@@ -191,11 +251,12 @@ function finishPitch(){
 function endGame(){
   setState('end'); renderDots();
   let newBest = false;
-  if (score > best) { best = score; newBest = true; try { localStorage.setItem('lionspark_hr_best', best); } catch(e) {} }
+  if (score > best) { best = score; newBest = true; store.set('hr_best_' + mode, best); }
   $('best').textContent = best.toLocaleString();
   const longest = Math.max(0, ...results.filter(r=>r.homer).map(r=>r.dist));
   let rows = results.map((r,i) => `<tr><td>${i+1}${r.ev?' ⭐':''}</td><td>${r.note}</td><td>${r.dist?r.dist.toFixed(1)+'m':'-'}</td><td>${r.pts.toLocaleString()}</td></tr>`).join('');
   $('card').innerHTML = `<h1>${newBest?'🏆 신기록!':'경기 종료'}</h1>
+    <p><span class="tag">${M().name} 모드</span></p>
     <p style="font-size:30px;font-weight:800;color:#ffc83d;margin:4px 0">${score.toLocaleString()}점</p>
     <p>홈런 ${hrCount} / ${TOTAL} · 최장거리 ${longest ? longest.toFixed(1)+'m' : '-'}</p>
     <div class="save"><input id="nm" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="nickname"><button id="sv">점수 저장</button></div>
@@ -204,12 +265,13 @@ function endGame(){
       <div style="max-height:200px;overflow:auto"><table><tr><th>구</th><th>결과</th><th>거리</th><th>점수</th></tr>${rows}</table></div>
       <div class="lb" id="lb"></div>
     </div>
-    <button id="go">다시 하기</button>`;
+    <div><button id="go">다시 하기</button> <button id="home" class="ghost">처음으로</button></div>`;
   $('overlay').classList.remove('hidden');
   $('go').onclick = startGame;
+  $('home').onclick = () => { pitch = null; swingT = -1; score = 0; hrCount = 0; results = []; eventSet = new Set(); setState('title'); showTitle(); renderDots(); };
   const nm = $('nm'), sv = $('sv');
   try { nm.value = localStorage.getItem('hr_name') || ''; } catch(e) {}
-  sv.onclick = () => saveScore(nm.value, { score, homers:hrCount, longest });
+  sv.onclick = () => saveScore(nm.value, { score, homers:hrCount, longest, mode });
   nm.addEventListener('keydown', e => { if (e.key === 'Enter') sv.click(); });
   loadBoard($('lb'));
 }
@@ -220,18 +282,19 @@ let myId = null;
 
 async function loadBoard(el, limit = 10){
   if (!el) return;
-  el.innerHTML = '<h3>🏆 랭킹 TOP ' + limit + '</h3><p class="msg">불러오는 중…</p>';
+  const title = `🏆 ${M().name} 랭킹 TOP ${limit}`;
+  el.innerHTML = '<h3>' + title + '</h3><p class="msg">불러오는 중…</p>';
   try {
-    const r = await fetch('/api/scores?limit=' + limit);
+    const r = await fetch('/api/scores?mode=' + mode + '&limit=' + limit);
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || '');
     const scores = j.scores || [];
     const rows = scores.length
       ? scores.map((s,i) => `<tr class="${s.id===myId?'me':''}"><td>${i+1}</td><td>${esc(s.name)}</td><td>${s.homers}HR</td><td>${s.score.toLocaleString()}</td></tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center;color:#8fa0bb">아직 기록이 없어요</td></tr>';
-    el.innerHTML = `<h3>🏆 랭킹 TOP ${limit}</h3><table>${rows}</table>`;
+    el.innerHTML = `<h3>${title}</h3><table>${rows}</table>`;
   } catch(e) {
-    el.innerHTML = '<h3>🏆 랭킹</h3><p class="msg">' + esc(e.message || '랭킹 서버에 연결할 수 없어요') + '</p>';
+    el.innerHTML = '<h3>' + title + '</h3><p class="msg">' + esc(e.message || '랭킹 서버에 연결할 수 없어요') + '</p>';
   }
 }
 
@@ -258,11 +321,29 @@ async function saveScore(name, data){
 function showTitle(){
   $('card').innerHTML = `<h1>⚾ 홈런레이스</h1>
     <p>총 <b>${TOTAL}개</b>의 공이 날아옵니다. 그중 <b style="color:#ffc83d">${EVENTS}개는 점수 2배</b> 이벤트!</p>
-    <p>홈런이면 <b>비거리(m) × 100점</b>, 홈런이 아니면 0점.</p>
+    <p>홈런이면 <b>비거리(m) × 100점</b>, 홈런이 아니면 0점. <b style="color:#ffc83d">PERFECT는 무조건 홈런!</b></p>
+    <div class="opt"><span class="ol">난이도</span>
+      <div class="seg" id="modes">${Object.entries(MODES).map(([k,v]) => `<button data-m="${k}" class="${k===mode?'on':''}">${v.name}</button>`).join('')}</div>
+    </div>
+    <p class="modeinfo" id="modeinfo"></p>
+    <div class="opt"><span class="ol">유니폼</span>
+      <div class="sw" id="sw">${UNIFORMS.map(u => `<button data-u="${u.id}" title="${u.name}" aria-label="${u.name}" class="${u.id===uniform.id?'on':''}" style="background:${u.body}"></button>`).join('')}</div>
+    </div>
     <button id="go">경기 시작</button>
     <div class="lb" id="lb" style="max-width:340px;margin:16px auto 0"></div>`;
   $('go').onclick = startGame;
-  loadBoard($('lb'), 5);
+  const info = { easy:'공이 느리고 타이밍 판정이 넉넉해요.', hard:'공이 빠르고 PERFECT 판정이 아주 좁아요.' };
+  const refresh = () => {
+    document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+    $('modeinfo').textContent = info[mode];
+    loadBest(); loadBoard($('lb'), 5);
+  };
+  document.querySelectorAll('#modes button').forEach(b => b.onclick = () => { mode = b.dataset.m; store.set('hr_mode', mode); refresh(); });
+  document.querySelectorAll('#sw button').forEach(b => b.onclick = () => {
+    uniform = UNIFORMS.find(u => u.id === b.dataset.u); store.set('hr_uniform', uniform.id);
+    document.querySelectorAll('#sw button').forEach(x => x.classList.toggle('on', x === b));
+  });
+  refresh();
 }
 
 // ===== 입력 =====
@@ -372,10 +453,11 @@ function drawBatter(now){
   ctx.strokeStyle = '#d9dfeb'; ctx.lineWidth = 16; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-24, 110); ctx.moveTo(14, 0); ctx.lineTo(36, 110); ctx.stroke();
   // 몸
-  ctx.fillStyle = '#0d2a5c'; roundRect(-30, -110, 60, 115, 18); ctx.fill();
-  ctx.fillStyle = '#e6eaf2'; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('25', 0, -45);
+  ctx.fillStyle = uniform.body; roundRect(-30, -110, 60, 115, 18); ctx.fill();
+  if (uniform.id === 'white') { ctx.strokeStyle = '#9aa6bd'; ctx.lineWidth = 2; ctx.stroke(); }
+  ctx.fillStyle = uniform.num; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('25', 0, -45);
   // 헬멧
-  ctx.fillStyle = '#0d2a5c'; ctx.beginPath(); ctx.arc(4, -132, 26, Math.PI, 0); ctx.fill(); ctx.fillRect(-22, -134, 52, 12);
+  ctx.fillStyle = uniform.id === 'white' ? '#13306b' : uniform.body; ctx.beginPath(); ctx.arc(4, -132, 26, Math.PI, 0); ctx.fill(); ctx.fillRect(-22, -134, 52, 12);
   // 배트
   const ang = -2.3 + sw * 3.3;
   ctx.translate(18, -82); ctx.rotate(ang);
@@ -499,6 +581,7 @@ function loop(now){
   if (state === 'flight') drawFlight(now);
   else if (state === 'result') drawResult(now);
   else if (state === 'pitch') drawPitchView(now);
+  else if (state === 'title') drawPitchView(now);
   else drawField();
   if (banner && now < banner.until && state === 'pitch') {
     ctx.fillStyle = 'rgba(0,0,0,.55)'; roundRect(W/2-210, 90, 420, 56, 28); ctx.fill();
