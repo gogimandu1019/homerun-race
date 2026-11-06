@@ -21,6 +21,8 @@
 
 배포 방식: `main` 브랜치에 push하면 Vercel이 자동으로 배포합니다 (1~2분).
 
+> 💸 **호스팅 이사 예정**: Vercel Pro(월 $20) → Cloudflare Pages(무료). 코드는 양쪽에서 돌아가게 준비 완료(2026-11-06). 남은 클릭 작업은 [CLOUDFLARE-MIGRATION.md](CLOUDFLARE-MIGRATION.md) 참고. Vercel 다음 결제일 일주일 전쯤 진행.
+
 ---
 
 ## 2. 파일 구조
@@ -40,6 +42,9 @@ README.md                  설치·배포 방법
 HANDOFF.md                 이 문서
 backup/                    대화 기록 백업 (git에 올리지 않음, 로컬 전용)
 scripts/preview-server.js  로컬 미리보기 서버 (7번 참고)
+functions/, wrangler.toml, _routes.json   Cloudflare Pages용 (api/*.js를 그대로 감싸서 사용)
+vercel.json                cleanUrls (/guide.html → /guide)
+CLOUDFLARE-MIGRATION.md    Cloudflare 이사 순서
 .claude/                   Claude 앱용 로컬 설정 (git에 올리지 않음)
 ```
 
@@ -158,7 +163,7 @@ node scripts/preview-server.js
 ```
 → http://localhost:8770
 
-- 이 폴더의 파일을 그대로 보여주고, `/api/*` 조회는 실제 사이트(`homerun-race-b3p3.vercel.app`)에서 curl로 읽어옵니다.
+- 이 폴더의 파일을 그대로 보여주고, `/api/*` 조회는 실제 사이트(`homerunracegame.com`)에서 curl로 읽어옵니다.
 - 실제 랭킹에 테스트 기록이 쌓이지 않도록 미리보기에서 **점수 저장(POST)은 막아둡니다**.
 
 ---

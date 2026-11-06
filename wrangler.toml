@@ -1,0 +1,5 @@
+# Cloudflare Pages 설정 (Vercel은 이 파일을 쓰지 않음)
+name = "homerun-race"
+pages_build_output_dir = "."
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]

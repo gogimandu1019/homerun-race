@@ -102,8 +102,8 @@ https://homerunracegame.com/api/mcp
 | 주소 | 내용 |
 |---|---|
 | [homerunracegame.com](https://homerunracegame.com/) | 게임 |
-| [게임 방법](https://homerunracegame.com/guide.html) | 규칙, 조작법, 팁, 자주 묻는 질문 |
-| [개인정보처리방침](https://homerunracegame.com/privacy.html) | 저장하는 정보와 문의처 |
+| [게임 방법](https://homerunracegame.com/guide) | 규칙, 조작법, 팁, 자주 묻는 질문 |
+| [개인정보처리방침](https://homerunracegame.com/privacy) | 저장하는 정보와 문의처 |
 
 문의·건의: gogimandu.official@gmail.com
 
