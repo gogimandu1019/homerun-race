@@ -1,58 +1,112 @@
 # ⚾ 홈런레이스
 
-타이밍 맞춰 클릭해서 홈런을 치는 게임입니다. 외야는 파울라인 100m · 중앙 122m의 둥근 펜스(높이 3.6m)이고,
-15구 중 5구는 점수 2배 이벤트입니다. 이름과 점수는 Supabase에 저장되고 랭킹으로 보여요.
+**타이밍 맞춰 담장을 넘기는 웹 야구 게임**
+
+👉 **지금 플레이하기: https://homerunracegame.com/**
+
+날아오는 공에 맞춰 화면을 클릭(모바일은 탭)해 스윙하고, 15구 동안 홈런 비거리로 점수를 겨루는 게임입니다.
+설치나 회원가입 없이 PC와 모바일 브라우저에서 바로 즐길 수 있습니다.
+
+---
+
+## 게임 방법
+
+1. 시작 화면에서 **닉네임**, **난이도**, **응원 팀(유니폼)** 을 고릅니다.
+2. 투수가 공을 던지면, 공이 홈플레이트에 들어오는 순간에 맞춰 **클릭 / 탭 / 스페이스바**로 스윙합니다.
+3. 15구를 모두 치면 결과가 나오고, 기록을 랭킹에 올릴 수 있습니다.
+
+### 타이밍 판정
+
+| 판정 | 결과 |
+|---|---|
+| **PERFECT** | 무조건 홈런 |
+| **GOOD** | 잘 맞은 타구. 펜스를 넘길 가능성이 높음 |
+| 그 외 | 빗맞거나 헛스윙 |
+
+- 일찍 치면 왼쪽, 늦게 치면 오른쪽으로 날아갑니다. 너무 빗나가면 파울입니다.
+
+### 점수
+
+- 홈런이면 **비거리(m) × 100점**, 홈런이 아니면 0점
+- 15구 중 무작위 **5구는 점수 2배** 이벤트
+- 구장은 파울라인 100m, 가운데 122m의 둥근 펜스(높이 3.6m)
+
+---
+
+## 난이도
+
+| | 이지 | 하드 |
+|---|---|---|
+| 구속 | 115~140km/h | 130~155km/h |
+| PERFECT 판정 범위 | ±30ms | ±14ms |
+| GOOD 판정 범위 | ±70ms | ±38ms |
+| 공이 보이는 속도 | 느리게 | 더 빠르게 |
+
+랭킹은 이지와 하드가 **따로** 집계됩니다.
+
+---
+
+## 팀과 유니폼
+
+10개 팀 중 하나를 골라 그 팀 유니폼을 입고 칩니다. 등번호는 팀 기본 번호를 쓰거나 0~99 사이로 직접 정할 수 있습니다.
+
+수원 마법사 · 대구 사자 · 광주 호랑이 · 서울 쌍둥이 · 서울 곰돌이 ·
+인천 강아지 · 부산 갈매기 · 창원 공룡 · 대전 독수리 · 서울 영웅
+
+> 팀 이름과 디자인은 게임용 창작이며, 실제 프로야구 구단·리그와는 관련이 없습니다.
+
+---
+
+## 랭킹
+
+게임이 끝나면 닉네임으로 기록을 저장할 수 있고, 세 가지 순위표가 있습니다.
+
+- **점수**: 한 경기 총점 순위
+- **비거리**: 한 경기에서 가장 멀리 친 홈런 순위
+- **팀**: 팀별 점수 합계 순위. 내 기록이 응원 팀 점수에 더해집니다.
+
+---
+
+## 페이지
+
+| 주소 | 내용 |
+|---|---|
+| [homerunracegame.com](https://homerunracegame.com/) | 게임 |
+| [게임 방법](https://homerunracegame.com/guide.html) | 규칙, 조작법, 팁, 자주 묻는 질문 |
+| [개인정보처리방침](https://homerunracegame.com/privacy.html) | 저장하는 정보와 문의처 |
+
+문의·건의: gogimandu.official@gmail.com
+
+---
+
+## 기술 구성
+
+| 부분 | 사용한 것 |
+|---|---|
+| 게임 화면 | HTML · CSS · JavaScript 한 파일 (`index.html`), Canvas로 그림 |
+| 랭킹 API | Vercel 서버리스 함수 (`api/scores.js`) |
+| 데이터베이스 | Supabase (`scores` 테이블, `team_standings` 뷰) |
+| 호스팅 | Vercel |
 
 ```
-index.html          게임 (정적 페이지)
-api/scores.js       Vercel 서버리스 함수: GET 랭킹 조회 / POST 점수 저장
-supabase/schema.sql 랭킹 테이블 생성 SQL (처음 만들 때)
-supabase/002_add_mode.sql  이지/하드 모드 컬럼 추가 (이미 테이블이 있을 때)
-supabase/003_add_team.sql  팀 컬럼 + 비거리 랭킹 인덱스 추가 (이미 테이블이 있을 때)
-supabase/004_team_standings.sql  팀별 순위 뷰 (+ 팀 없는 기존 기록을 한화로 합산)
-.env.example        필요한 환경변수 목록
+index.html            게임
+guide.html            게임 방법 페이지
+privacy.html          개인정보처리방침
+api/scores.js         랭킹 조회(GET) / 기록 저장(POST)
+supabase/*.sql        데이터베이스 테이블·뷰 생성 SQL
+scripts/              로컬 미리보기 서버
 ```
 
-## 1. Supabase 준비
-1. https://supabase.com 에서 새 프로젝트를 만듭니다.
-2. **SQL Editor**에 `supabase/schema.sql` 내용을 붙여넣고 **Run**.
-3. 두 값을 복사해 둡니다.
-   - **Project Settings → Data API**의 Project URL (`https://xxxx.supabase.co`) → `SUPABASE_URL`
-   - **Project Settings → API Keys**의 **secret** 키(`sb_secret_…`) 또는 Legacy 탭의 `service_role` 키 → `SUPABASE_SERVICE_ROLE_KEY`
-     (⚠️ `sb_publishable_…`/`anon` 키는 안 됩니다. 비밀 키는 절대 브라우저 코드나 깃에 넣지 마세요)
-4. Vercel에서 환경변수를 추가·수정했다면 **Redeploy** 해야 반영됩니다.
+### 직접 띄워 보려면
 
-## 2. Vercel 배포
-**방법 A — GitHub 연동 (추천)**
-1. 이 폴더를 GitHub 저장소에 올립니다.
-2. https://vercel.com/new 에서 저장소를 Import (Framework Preset: **Other**, 빌드 설정은 비워둠).
-3. **Environment Variables**에 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`를 추가하고 Deploy.
+1. Supabase 프로젝트를 만들고 SQL Editor에서 `supabase/schema.sql`을 실행합니다.
+   (기존 테이블이 있으면 `002`~`004` SQL을 순서대로 실행)
+2. Vercel에 이 저장소를 연결하고 환경변수 두 개를 넣습니다. 목록은 `.env.example`에 있습니다.
+   - `SUPABASE_URL`: Supabase Project URL
+   - `SUPABASE_SERVICE_ROLE_KEY`: Supabase secret 키 (`sb_secret_…`). 브라우저 코드나 Git에 넣지 마세요.
+3. 배포하면 끝입니다. 로컬에서는 `vercel dev`로 실행할 수 있습니다.
 
-**방법 B — CLI**
-```bash
-npm i -g vercel
-vercel            # 로그인 후 프로젝트 연결
-vercel env add SUPABASE_URL
-vercel env add SUPABASE_SERVICE_ROLE_KEY
-vercel --prod
-```
+### 보안
 
-## 이미 테이블을 만들었다면 (이지/하드 모드 업데이트)
-Supabase **SQL Editor**에서 `supabase/002_add_mode.sql`, `003_add_team.sql`, `004_team_standings.sql`을 순서대로 한 번씩 실행하세요. 기존 기록은 이지 모드·팀 없음으로 들어갑니다.
-
-## 광고 (구글 애드센스)
-1. 내 도메인을 Vercel에 연결하고 애드센스 승인을 받습니다.
-2. `index.html`에서 `const ADSENSE = { client: '', slot: '' };`에 게시자 ID(`ca-pub-…`)와 광고 단위 ID를 넣습니다.
-3. 프로젝트 루트에 `ads.txt`를 만들고 애드센스가 알려주는 한 줄을 넣습니다.
-   예: `google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0`
-4. 광고는 게임 화면 아래에만 표시됩니다 (게임 중 실수 클릭 방지). ID를 비워두면 광고가 나오지 않습니다.
-
-## 로컬 실행
-`.env.example`을 `.env.local`로 복사해 값을 채운 뒤:
-```bash
-vercel dev
-```
-
-## 보안 메모
-- 테이블은 RLS가 켜져 있고 정책이 없어서, 브라우저에서 Supabase로 직접 접근할 수 없습니다. 오직 `/api/scores`만 service_role 키로 읽고 씁니다.
-- API는 이름 길이(1~12자), 점수 범위(0~320,000), 홈런 수(0~15)를 검사합니다. 점수 계산이 브라우저에서 이뤄지므로 마음먹고 조작하는 것까지 완전히 막지는 못합니다.
+- 데이터베이스는 브라우저에서 직접 접근할 수 없고, `/api/scores`만 서버 키로 읽고 씁니다.
+- 서버에서 닉네임 길이(1~12자), 점수(0~320,000), 홈런 수(0~15), 비거리(0~200m) 범위를 검사합니다.
