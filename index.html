@@ -860,8 +860,13 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', layo
 (() => {
   const btn = $('chatBtn'), box = $('chatBox'), log = $('chatLog'), form = $('chatForm'), inp = $('chatIn'), left = $('chatLeft');
   const hist = []; let busy = false;
+  // AI 답변의 **굵게** 표시만 굵은 글씨로 바꿈 (먼저 HTML을 이스케이프해서 다른 태그는 그대로 글자로 보임)
+  const show = (d, text, rich) => {
+    if (!rich) { d.textContent = text; return; }
+    d.innerHTML = esc(text).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>');
+  };
   const add = (role, text) => {
-    const d = document.createElement('div'); d.className = 'cm ' + (role === 'user' ? 'u' : 'a'); d.textContent = text;
+    const d = document.createElement('div'); d.className = 'cm ' + (role === 'user' ? 'u' : 'a'); show(d, text, role !== 'user');
     log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
   };
   add('assistant', '안녕하세요! 홈런레이스 도우미예요 ⚾\n게임 규칙, 공략, 랭킹, 팀 순위, 내 기록을 물어보세요.');
@@ -881,7 +886,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', layo
       const j = await r.json().catch(() => ({}));
       if (typeof j.remaining === 'number') left.textContent = `오늘 ${j.remaining}번 남음`;
       if (!r.ok) throw new Error(j.error || '');
-      wait.textContent = j.reply; hist.push({ role: 'assistant', content: j.reply });
+      show(wait, j.reply, true); hist.push({ role: 'assistant', content: j.reply });
     } catch (err) {
       wait.textContent = err.message && err.message !== 'Failed to fetch' ? err.message : 'AI 도우미에 연결할 수 없어요.';
       wait.classList.add('err'); hist.pop();   // 실패한 질문은 대화 기록에서 뺌
