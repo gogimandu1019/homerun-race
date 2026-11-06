@@ -2,7 +2,7 @@
 // 미리보기에서 실제 랭킹에 기록이 쌓이지 않도록 POST(점수 저장)는 막아둡니다.
 const http = require('http'), fs = require('fs'), path = require('path'), { execFile } = require('child_process');
 const ROOT = path.resolve(__dirname, '..'), PORT = +process.env.PORT || 8770, API = 'https://homerun-race-b3p3.vercel.app';
-const TYPES = { '.html':'text/html; charset=utf-8', '.js':'text/javascript', '.css':'text/css', '.txt':'text/plain; charset=utf-8', '.json':'application/json' };
+const TYPES = { '.html':'text/html; charset=utf-8', '.js':'text/javascript', '.css':'text/css', '.txt':'text/plain; charset=utf-8', '.json':'application/json', '.xml':'application/xml', '.jpg':'image/jpeg', '.png':'image/png', '.svg':'image/svg+xml' };
 http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/api/')) {
