@@ -111,9 +111,9 @@
   .sw button.on { outline:3px solid var(--gold); outline-offset:2px; }
   #ad { width:100%; max-width:var(--gw, 960px); margin-top:28px; min-height:0; text-align:center; }
   #ad:empty { display:none; }
-  .foot { width:100%; max-width:var(--gw, 960px); margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-wrap:wrap; gap:6px 10px; justify-content:center; font-size:12px; color:var(--muted); text-align:center; }
+  .foot { width:100%; max-width:var(--gw, 960px); margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; color:var(--muted); text-align:center; }
   .foot a { color:#b8c4da; }
-  .foot .sep { opacity:.5; }
+  .foot .sep { opacity:.5; margin:0 4px; }
   .help { color:var(--muted); font-size:13px; text-align:center; max-width:var(--gw, 960px); }
   /* 세로 모바일 */
   html.m body { padding:8px; gap:6px; justify-content:flex-start; }
@@ -127,7 +127,7 @@
   html.m #overlay { position:fixed; inset:0; z-index:20; border-radius:0; background:rgba(5,10,20,.96); }
   html.m .card { padding:16px 12px; }
   html.m .help { display:none; }
-  html.m .foot { margin-top:0; padding:6px 0 0; font-size:11px; gap:2px 8px; }
+  html.m .foot { margin-top:0; padding:6px 0 0; font-size:11px; gap:2px; }
   html.m .pb { height:180px; }
   /* 가로가 짧은 화면(가로 모드 휴대폰 등) */
   html.short body { padding:8px; gap:6px; justify-content:flex-start; }
@@ -157,11 +157,8 @@
 <!-- 광고: 게임 화면과 충분히 떨어진 아래쪽에만 둡니다 (실수 클릭 방지) -->
 <div id="ad"></div>
 <footer class="foot">
-  <span>건의사항·문의는 <a href="mailto:gogimandu.official@gmail.com">gogimandu.official@gmail.com</a> 으로 보내 주세요.</span>
-  <span class="sep">·</span>
-  <a href="/guide.html">게임 방법</a>
-  <span class="sep">·</span>
-  <a href="/privacy.html">개인정보처리방침</a>
+  <div>건의사항·문의 <a href="mailto:gogimandu.official@gmail.com">gogimandu.official@gmail.com</a></div>
+  <div><a href="/guide.html">게임 방법</a> <span class="sep">|</span> <a href="/privacy.html">개인정보처리방침</a></div>
 </footer>
 <script>
 // ===== 광고 설정 =====
