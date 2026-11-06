@@ -109,6 +109,15 @@
   .sw { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:420px; }
   .sw button { margin:0; width:30px; height:30px; flex:none; padding:0; border-radius:50%; border:2px solid rgba(255,255,255,.25); }
   .sw button.on { outline:3px solid var(--gold); outline-offset:2px; }
+  .share { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
+  .share button { margin:0; }
+  .vs { font-size:14px; margin:6px 0 0 !important; color:#c7d2e4; }
+  .vs b { color:var(--gold); }
+  .chal { margin:8px auto 0; max-width:420px; padding:10px 14px; border-radius:14px; background:rgba(255,200,61,.1); border:1px solid rgba(255,200,61,.4); font-size:14px; line-height:1.5; }
+  .chal b { color:var(--gold); }
+  #shot { position:fixed; inset:0; z-index:50; background:rgba(5,9,18,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; box-sizing:border-box; }
+  #shot img { max-width:100%; max-height:72vh; border-radius:12px; -webkit-touch-callout:default; }
+  #shot p { margin:0; font-size:14px; color:var(--text); }
   #ad { width:100%; max-width:var(--gw, 960px); margin-top:28px; min-height:0; text-align:center; }
   #ad:empty { display:none; }
   .foot { width:100%; max-width:var(--gw, 960px); margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; color:var(--muted); text-align:center; }
@@ -367,11 +376,15 @@ function endGame(){
   const summary = isEndless()
     ? `<b>홈런 ${hrCount}개</b> <span>최장거리 ${longest ? longest.toFixed(1)+'m' : '-'} · ${score.toLocaleString()}점 · 레벨 ${endlessLevel() + 1}</span>`
     : `<b>${score.toLocaleString()}점</b> <span>홈런 ${hrCount} / ${TOTAL} · 최장거리 ${longest ? longest.toFixed(1)+'m' : '-'}</span>`;
+  lastGame = { mode, score, homers:hrCount, longest, team:uniform.id, no:jerseyNo(), newBest, level:endlessLevel() + 1,
+               dots: results.map(r => r ? (r.homer ? (r.ev ? 'ev' : 'hr') : 'out') : '') };
   let rows = results.map((r,i) => `<tr class="${r.homer?'hr':''}"><td>${i+1}${r.ev?'<b class="ev">2×</b>':''}</td><td>${r.note}</td><td>${r.dist?r.dist.toFixed(1)+'m':'-'}</td><td>${r.pts.toLocaleString()}</td></tr>`).join('');
   $('card').innerHTML = `<h1 class="endh">${newBest?'🏆 신기록!':'경기 종료'} <span class="tag">${M().name} 모드</span></h1>
-    <p class="endscore">${summary}</p>
+    <p class="endscore">${summary}</p>${versusLine()}
     <div class="save"><input id="nm" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="nickname"><button id="sv">점수 저장</button></div>
     <div class="msg" id="msg"></div>
+    <div class="share"><button id="shImg" class="ghost small">📷 이미지로 저장</button><button id="shLink" class="ghost small">🔗 링크로 공유</button></div>
+    <div class="msg" id="shmsg"></div>
     <div class="panels">
       <div class="panel">
         <div class="ph"><h3>📋 내 기록</h3><span class="sub">${teamCell(uniform.id)}</span></div>
@@ -388,6 +401,8 @@ function endGame(){
   try { nm.value = localStorage.getItem('hr_name') || ''; } catch(e) {}
   sv.onclick = () => saveScore(nm.value, { score, homers:hrCount, longest, mode, team: uniform.id });
   nm.addEventListener('keydown', e => { if (e.key === 'Enter') sv.click(); });
+  $('shImg').onclick = saveImage;
+  $('shLink').onclick = shareLink;
   loadBoard($('lb'));
 }
 
@@ -471,8 +486,142 @@ async function saveScore(name, data){
   }
 }
 
+// ===== 기록 공유: 이미지로 저장 / 링크로 공유 =====
+// 링크(?m=모드&s=점수&h=홈런&l=비거리&t=팀&n=이름)는 화면에 "도전장"만 보여주고, 랭킹에는 전혀 들어가지 않는다.
+let lastGame = null;
+const coarse = () => window.matchMedia && matchMedia('(pointer:coarse)').matches;
+const myName = () => { const el = $('nm'); const v = el && el.value.trim(); return (v || store.get('hr_name', '')).trim().slice(0, 12); };
+const fmtMain = g => g.mode === 'endless' ? `홈런 ${g.homers}개` : `${g.score.toLocaleString()}점`;
+const challenge = (() => {
+  try {
+    const q = new URLSearchParams(location.search);
+    const m = q.get('m');
+    if (!MODES[m] || !q.has('s')) return null;
+    const num = (k, max) => { const v = Number(q.get(k)); return Number.isFinite(v) ? Math.min(max, Math.max(0, v)) : 0; };
+    const endless = m === 'endless';
+    const c = { mode:m, score:Math.floor(num('s', endless ? 5e7 : 320000)), homers:Math.floor(num('h', endless ? 1000 : TOTAL)),
+                longest:num('l', 200), team:teamOf(q.get('t')) ? q.get('t') : '', name:(q.get('n') || '').trim().slice(0, 12) };
+    mode = m;   // 친구가 한 모드로 바로 도전 (저장된 선택은 바꾸지 않음)
+    history.replaceState(null, '', location.pathname);   // 새로고침해도 주소가 깔끔하게
+    return c;
+  } catch(e) { return null; }
+})();
+const who = c => c.name ? `<b>${esc(c.name)}</b>님` : '친구';
+function challengeBanner(){
+  if (!challenge) return '';
+  const t = teamOf(challenge.team);
+  return `<div class="chal">🔥 ${who(challenge)}${t ? `(${t.short})` : ''}${challenge.name ? '이' : '가'} <b>${MODES[challenge.mode].name} 모드</b>에서
+    <b>${fmtMain(challenge)}</b>${challenge.mode === 'endless' ? '' : `(홈런 ${challenge.homers}개)`}${challenge.mode === 'endless' ? '를' : '을'} 기록했어요. 이길 수 있을까요?</div>`;
+}
+function versusLine(){
+  if (!challenge || challenge.mode !== mode) return '';
+  const endless = mode === 'endless';
+  const mine = endless ? hrCount : score, theirs = endless ? challenge.homers : challenge.score;
+  if (mine > theirs) return `<p class="vs">🎉 ${who(challenge)}의 기록(${fmtMain(challenge)})을 넘었어요! 이 기록을 보내 보세요.</p>`;
+  if (mine === theirs) return `<p class="vs">🤝 ${who(challenge)}${challenge.name ? '과' : '와'} 동점이에요!</p>`;
+  const gap = theirs - mine;
+  return `<p class="vs">😤 ${who(challenge)}까지 <b>${endless ? `홈런 ${gap}개` : `${gap.toLocaleString()}점`}</b> 남았어요. 다시 도전!</p>`;
+}
+function shareMsg(t){ const el = $('shmsg'); if (el) { el.innerHTML = t; setTimeout(fitCard); } }
+
+// 결과 카드 그리기 (1080×1350, 인스타·카톡에 잘 맞는 4:5 세로)
+const FONT = '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+function drawShareCard(g){
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+  const x = c.getContext('2d'), CX = 540;
+  const bg = x.createLinearGradient(0, 0, 0, 1350); bg.addColorStop(0, '#0b1220'); bg.addColorStop(1, '#16274a');
+  x.fillStyle = bg; x.fillRect(0, 0, 1080, 1350);
+  // 바닥에 은은한 외야 펜스 곡선
+  x.strokeStyle = 'rgba(70,211,122,.18)'; x.lineWidth = 6;
+  x.beginPath(); x.arc(CX, 1900, 900, Math.PI * 1.25, Math.PI * 1.75); x.stroke();
+  x.fillStyle = 'rgba(70,211,122,.06)';
+  x.beginPath(); x.moveTo(CX, 1350); x.arc(CX, 1900, 900, Math.PI * 1.25, Math.PI * 1.75); x.closePath(); x.fill();
+  const text = (t, y, size, color, weight = 800) => { x.font = `${weight} ${size}px ${FONT}`; x.fillStyle = color; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(t, CX, y); };
+  const pill = (t, y, bgc, fg) => {
+    x.font = `800 40px ${FONT}`; const w = x.measureText(t).width + 64;
+    x.fillStyle = bgc; x.beginPath();
+    if (x.roundRect) x.roundRect(CX - w/2, y - 50, w, 70, 35); else x.rect(CX - w/2, y - 50, w, 70);
+    x.fill(); x.fillStyle = fg; x.textAlign = 'center'; x.fillText(t, CX, y - 2);
+  };
+  text('⚾ 홈런레이스', 160, 72, '#eef2f8');
+  pill(`${MODES[g.mode].name} 모드`, 270, '#ffc83d', '#1a1300');
+  // 팀 유니폼 원 + 등번호
+  const u = teamOf(g.team) || UNIFORMS[0];
+  x.beginPath(); x.arc(CX, 440, 96, 0, Math.PI * 2);
+  if (u.stripe) { x.save(); x.clip(); x.fillStyle = u.body; x.fillRect(CX-96, 344, 192, 192); x.fillStyle = u.stripe; for (let i = CX-96; i < CX+96; i += 22) x.fillRect(i, 344, 4, 192); x.restore(); }
+  else { x.fillStyle = u.body; x.fill(); }
+  x.lineWidth = 6; x.strokeStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.arc(CX, 440, 96, 0, Math.PI * 2); x.stroke();
+  x.font = `900 92px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.lineWidth = 8; x.strokeStyle = u.stripe ? '#f4f4f6' : 'rgba(0,0,0,.25)'; x.strokeText(g.no, CX, 446);
+  x.fillStyle = u.num; x.fillText(g.no, CX, 446); x.textBaseline = 'alphabetic';
+  const name = myName();
+  text(name ? `${name} · ${u.name}` : u.name, 610, 46, '#c7d2e4', 700);
+  if (g.newBest) text('🏆 신기록!', 712, 48, '#ffc83d');
+  // 큰 점수
+  const big = g.mode === 'endless' ? String(g.homers) : g.score.toLocaleString();
+  const unit = g.mode === 'endless' ? '홈런' : '점';
+  x.font = `900 170px ${FONT}`; const bw = x.measureText(big).width;
+  x.font = `800 64px ${FONT}`; const uw = x.measureText(unit).width;
+  const left = CX - (bw + 16 + uw) / 2;
+  x.textAlign = 'left'; x.fillStyle = '#ffc83d'; x.font = `900 170px ${FONT}`; x.fillText(big, left, 880);
+  x.font = `800 64px ${FONT}`; x.fillStyle = '#eef2f8'; x.fillText(unit, left + bw + 16, 880);
+  const dist = g.longest ? `${g.longest.toFixed(1)}m` : '-';
+  text(g.mode === 'endless' ? `최장 ${dist} · ${g.score.toLocaleString()}점 · 레벨 ${g.level}` : `홈런 ${g.homers} / ${TOTAL} · 최장 ${dist}`, 970, 46, '#c7d2e4', 700);
+  // 15구 결과 점 (무한 모드는 생략)
+  if (g.mode !== 'endless') {
+    const r = 22, gap = 60, x0 = CX - gap * (TOTAL - 1) / 2;
+    g.dots.forEach((d, i) => { x.beginPath(); x.arc(x0 + i * gap, 1070, r, 0, Math.PI * 2);
+      x.fillStyle = d === 'ev' ? '#ffc83d' : d === 'hr' ? '#46d37a' : d === 'out' ? '#e2544f' : '#26324a'; x.fill(); });
+  }
+  text('나도 도전하기 👉 homerunracegame.com', 1250, 44, '#eef2f8', 700);
+  return c;
+}
+
+async function saveImage(){
+  if (!lastGame || saveImage.busy) return;
+  saveImage.busy = true; shareMsg('이미지 만드는 중…');
+  const blob = await new Promise(r => drawShareCard(lastGame).toBlob(r, 'image/png'));
+  saveImage.busy = false; shareMsg('');
+  if (!blob) return shareMsg('이미지를 만들지 못했어요.');
+  const fname = `homerun-race-${lastGame.mode}.png`;
+  if (coarse()) {
+    // 휴대폰: 공유 시트(사진 저장·카톡 보내기)가 되면 그걸, 안 되면(카톡 안 브라우저 등) 이미지를 띄워 길게 눌러 저장
+    try {
+      const file = new File([blob], fname, { type:'image/png' });
+      if (navigator.canShare && navigator.canShare({ files:[file] })) { await navigator.share({ files:[file] }); return; }
+    } catch(e) { if (e && e.name === 'AbortError') return; }
+    const url = URL.createObjectURL(blob);
+    const box = document.createElement('div'); box.id = 'shot';
+    box.innerHTML = `<img src="${url}" alt="홈런레이스 결과 이미지"><p>이미지를 <b>길게 눌러</b> 저장하세요</p><button class="ghost small">닫기</button>`;
+    box.querySelector('button').onclick = () => { box.remove(); URL.revokeObjectURL(url); };
+    document.body.appendChild(box);
+    return;
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  shareMsg('이미지를 저장했어요! 📷');
+}
+
+function shareURL(g){
+  const q = new URLSearchParams({ m:g.mode, s:g.score, h:g.homers, l:g.longest ? g.longest.toFixed(1) : 0, t:g.team });
+  const n = myName(); if (n) q.set('n', n);
+  return `${location.origin}/?${q}`;
+}
+async function shareLink(){
+  if (!lastGame) return;
+  const url = shareURL(lastGame);
+  const text = `⚾ 홈런레이스 ${MODES[lastGame.mode].name} 모드에서 ${fmtMain(lastGame)}! 나를 이길 수 있어?`;
+  if (coarse() && navigator.share) {
+    try { await navigator.share({ title:'홈런레이스', text, url }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(`${text}\n${url}`); shareMsg('링크를 복사했어요! 친구에게 붙여넣기 해 보세요. 🔗'); }
+  catch(e) { shareMsg(`아래 주소를 복사해 보내 주세요<br><input readonly value="${esc(url)}" style="width:100%;max-width:360px;font-size:12px" onclick="this.select()">`); }
+}
+
 function showTitle(){
-  $('card').innerHTML = `<h1>⚾ 홈런레이스</h1>
+  $('card').innerHTML = `<h1>⚾ 홈런레이스</h1>${challengeBanner()}
     <div id="rules"></div>
     <div class="opt"><span class="ol">난이도</span>
       <div class="seg" id="modes">${Object.entries(MODES).map(([k,v]) => `<button data-m="${k}" class="${k===mode?'on':''}">${v.name}</button>`).join('')}</div>
