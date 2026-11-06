@@ -3,6 +3,9 @@
 
 const MAX_SCORE = 320000;   // 15구 · 최대 비거리 · 2배 이벤트 5개를 감안한 이론상 상한
 const TOTAL_PITCHES = 15;
+const EVENT_PITCHES = 5;     // 점수 2배 이벤트 공 수
+const MIN_HR_DIST = 95;      // 홈런 최소 비거리(파울라인 펜스 100m)에 여유를 둔 값
+const SAVE_GAP_SEC = 15;     // 같은 이름·모드로 연달아 저장할 수 있는 최소 간격(초)
 const MODES = ['easy', 'hard'];
 const pickMode = m => (MODES.includes(m) ? m : null);
 const TEAMS = ['kt', 'samsung', 'kia', 'lg', 'doosan', 'ssg', 'lotte', 'nc', 'hanwha', 'kiwoom'];
@@ -72,6 +75,17 @@ function cleanName(raw) {
 
 const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 
+// 점수·홈런 수·최장 비거리가 실제 게임에서 나올 수 있는 조합인지 확인
+// 게임 점수 = 홈런마다 round(비거리×100), 이벤트 공(최대 5개)은 2배. 비거리는 0.1m 단위.
+function consistent(score, homers, longest) {
+  if (homers === 0) return score === 0 && longest === 0;
+  if (longest < MIN_HR_DIST) return false;
+  const top = Math.round(longest * 100);                       // 가장 긴 홈런 1개의 점수
+  const max = top * (homers + Math.min(homers, EVENT_PITCHES)); // 모든 홈런이 최장거리 + 이벤트 최대
+  const min = top + (homers - 1) * MIN_HR_DIST * 100;           // 최장 홈런 1개 + 나머지는 최소 거리
+  return score >= min && score <= max;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   try {
@@ -100,7 +114,12 @@ module.exports = async function handler(req, res) {
       if (!isInt(score, 0, MAX_SCORE)) return res.status(400).json({ error: '점수가 올바르지 않습니다.' });
       if (!isInt(homers, 0, TOTAL_PITCHES)) return res.status(400).json({ error: '홈런 수가 올바르지 않습니다.' });
       if (!(longest >= 0 && longest <= 200)) return res.status(400).json({ error: '비거리가 올바르지 않습니다.' });
-      if (homers === 0 && score > 0) return res.status(400).json({ error: '점수가 올바르지 않습니다.' });
+      if (!consistent(score, homers, longest)) return res.status(400).json({ error: '점수와 홈런 기록이 맞지 않습니다.' });
+
+      // 같은 이름으로 너무 빨리 연달아 저장하는 것 막기 (한 경기는 이보다 오래 걸림)
+      const since = new Date(Date.now() - SAVE_GAP_SEC * 1000).toISOString();
+      const recent = await supabase(`scores?select=id&mode=eq.${mode}&name=eq.${encodeURIComponent(name)}&created_at=gt.${encodeURIComponent(since)}&limit=1`);
+      if (Array.isArray(recent.data) && recent.data.length) return res.status(429).json({ error: '방금 저장했어요. 잠시 후 다시 시도해 주세요.' });
 
       const { data } = await supabase('scores', {
         method: 'POST',
@@ -109,10 +128,14 @@ module.exports = async function handler(req, res) {
       });
       const row = Array.isArray(data) ? data[0] : data;
 
-      // 이번 점수의 순위 = 나보다 높은 점수 수 + 1 (실패해도 저장은 성공으로 처리)
+      // 이번 점수의 순위 = 랭킹표와 같은 기준(점수 높은 순, 동점이면 먼저 저장한 순)으로 내 앞에 있는 기록 수 + 1
+      // (실패해도 저장은 성공으로 처리)
       let rank = null;
       try {
-        const { headers } = await supabase(`scores?select=id&mode=eq.${mode}&score=gt.${score}&limit=1`, { headers: { Prefer: 'count=exact' } });
+        const ahead = row && row.created_at
+          ? `or=${encodeURIComponent(`(score.gt.${score},and(score.eq.${score},created_at.lt."${row.created_at}"))`)}`
+          : `score=gt.${score}`;
+        const { headers } = await supabase(`scores?select=id&mode=eq.${mode}&${ahead}&limit=1`, { headers: { Prefer: 'count=exact' } });
         const total = parseInt((headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
         rank = total + 1;
       } catch (e) { console.error('rank 계산 실패', e); }
