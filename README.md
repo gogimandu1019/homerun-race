@@ -56,8 +56,8 @@
 
 10개 팀 중 하나를 골라 그 팀 유니폼을 입고 칩니다. 등번호는 팀 기본 번호를 쓰거나 0~99 사이로 직접 정할 수 있습니다.
 
-수원 마법사 · 대구 사자 · 광주 호랑이 · 서울 쌍둥이 · 서울 곰돌이 ·
-인천 강아지 · 부산 갈매기 · 창원 공룡 · 대전 독수리 · 서울 영웅
+수원 마법사 · 대구 사자들 · 광주 호랑이 · 서울 쌍둥이 · 서울 곰돌이 ·
+인천 강아지 · 부산 갈매기 · 창원 공룡들 · 대전 독수리 · 서울 영웅들
 
 > 팀 이름과 디자인은 게임용 창작이며, 실제 프로야구 구단·리그와는 관련이 없습니다.
 
@@ -70,16 +70,6 @@
 - **점수**: 한 경기 총점 순위 (무한 모드는 **홈런**: 홈런 수 → 최장 비거리 순)
 - **비거리**: 한 경기에서 가장 멀리 친 홈런 순위
 - **팀**: 팀별 점수 합계 순위(무한 모드는 홈런 합계). 내 기록이 응원 팀 점수에 더해집니다.
-
----
-
-## AI 도우미 채팅
-
-게임 화면 **오른쪽 아래 💬 버튼**을 누르면 AI 도우미에게 규칙, 공략, 랭킹, 팀 순위, 내 기록을 물어볼 수 있습니다.
-
-- 경기 중에는 버튼이 숨겨져 스윙에 방해되지 않습니다.
-- 랭킹·기록 질문은 아래 MCP와 같은 조회 도구로 실제 데이터를 찾아 답합니다.
-- 게임과 관계없는 질문에는 답하지 않으며, 1인당 하루 10번까지 쓸 수 있습니다.
 
 ---
 
@@ -125,7 +115,6 @@ https://homerunracegame.com/api/mcp
 |---|---|
 | 게임 화면 | HTML · CSS · JavaScript 한 파일 (`index.html`), Canvas로 그림 |
 | 랭킹 API | Vercel 서버리스 함수 (`api/scores.js`) |
-| AI 채팅 | Vercel 서버리스 함수 (`api/chat.js`) → OpenRouter (기본 모델 Claude Haiku 5.5) |
 | MCP 서버 | Vercel 서버리스 함수 (`api/mcp.js`), Streamable HTTP · JSON 응답 · 상태 없음 |
 | 데이터베이스 | Supabase (`scores` 테이블, `team_standings` 뷰) |
 | 호스팅 | Vercel |
@@ -136,8 +125,7 @@ guide.html            게임 방법 페이지
 privacy.html          개인정보처리방침
 api/scores.js         랭킹 조회(GET) / 기록 저장(POST)
 api/mcp.js            AI 앱용 MCP 서버 (조회 전용)
-api/chat.js           AI 도우미 채팅 (OpenRouter)
-lib/game-tools.js     랭킹·기록 조회 도구 (MCP와 채팅이 같이 사용)
+lib/game-tools.js     랭킹·기록 조회 도구 (MCP 서버가 사용)
 lib/supabase.js       Supabase 연결 공용 코드
 supabase/*.sql        데이터베이스 테이블·뷰 생성 SQL
 scripts/              로컬 미리보기 서버
@@ -146,12 +134,10 @@ scripts/              로컬 미리보기 서버
 ### 직접 띄워 보려면
 
 1. Supabase 프로젝트를 만들고 SQL Editor에서 `supabase/schema.sql`을 실행합니다.
-   (기존 테이블이 있으면 `002`~`006` SQL을 순서대로 실행)
+   (기존 테이블이 있으면 `002`~`005` SQL을 순서대로 실행)
 2. Vercel에 이 저장소를 연결하고 환경변수 두 개를 넣습니다. 목록은 `.env.example`에 있습니다.
    - `SUPABASE_URL`: Supabase Project URL
    - `SUPABASE_SERVICE_ROLE_KEY`: Supabase secret 키 (`sb_secret_…`). 브라우저 코드나 Git에 넣지 마세요.
-   - `OPENROUTER_API_KEY`: AI 도우미 채팅용 OpenRouter 키 (선택). 없으면 채팅만 "준비 중"으로 나옵니다.
-   - `OPENROUTER_MODEL`: 채팅 모델을 바꿀 때만 (기본 `anthropic/claude-haiku-5.5`)
 3. 배포하면 끝입니다. 로컬에서는 `vercel dev`로 실행할 수 있습니다.
 
 ### 보안

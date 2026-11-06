@@ -140,25 +140,6 @@
   html.short .dot { width:12px; height:12px; font-size:7px; }
   html.short #overlay { position:fixed; inset:0; z-index:20; border-radius:0; background:rgba(5,10,20,.96); }
   @media (max-width:600px){ .stat{min-width:0; padding:6px 10px} .stat .v{font-size:17px} .card h1{font-size:26px} }
-
-  /* ===== AI 채팅 (오른쪽 아래 구석, 경기 중에는 숨김) ===== */
-  #chatBtn { position:fixed; right:16px; bottom:16px; z-index:50; margin:0; width:52px; height:52px; padding:0; font-size:24px;
-    border-radius:50%; box-shadow:0 6px 18px rgba(0,0,0,.5); }
-  #chatBox { position:fixed; right:16px; bottom:80px; z-index:50; width:min(340px, calc(100vw - 32px)); height:min(460px, calc(100dvh - 110px));
-    display:flex; flex-direction:column; background:var(--panel); border:1px solid #33415e; border-radius:14px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.55); }
-  #chatBox[hidden] { display:none; }
-  .chat-h { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid #26324a; font-weight:800; }
-  .chat-h small { color:var(--muted); font-weight:600; margin-left:auto; font-size:12px; }
-  .chat-h button { margin:0; padding:2px 8px; font-size:18px; background:transparent; color:var(--muted); }
-  #chatLog { flex:1; overflow:auto; padding:10px 12px; }
-  .cm { margin:6px 0; padding:8px 11px; border-radius:12px; max-width:86%; width:fit-content; white-space:pre-wrap; word-break:break-word; font-size:14px; line-height:1.55; }
-  .cm.u { margin-left:auto; background:var(--gold); color:#1a1300; }
-  .cm.a { background:#0b1220; color:var(--text); }
-  .cm.err { color:#ff9b97; }
-  #chatForm { display:flex; gap:6px; padding:8px; border-top:1px solid #26324a; }
-  #chatIn { flex:1; min-width:0; font-size:15px; padding:9px 12px; border-radius:999px; border:1px solid #3a4866; background:#0b1220; color:var(--text); }
-  #chatForm button { margin:0; font-size:14px; padding:8px 16px; }
-  body.playing #chatBtn, body.playing #chatBox { display:none; }
 </style>
 </head>
 <body>
@@ -182,13 +163,6 @@
   <span class="sep">·</span>
   <a href="/privacy.html">개인정보처리방침</a>
 </footer>
-<!-- AI 채팅: 오른쪽 아래 구석. 경기 중에는 숨겨서 스윙(클릭/탭)에 방해되지 않게 함 -->
-<button id="chatBtn" aria-label="AI 도우미 열기" aria-expanded="false" aria-controls="chatBox">💬</button>
-<section id="chatBox" hidden aria-label="AI 도우미">
-  <div class="chat-h">⚾ 홈런레이스 도우미 <small id="chatLeft">하루 10번</small><button id="chatX" aria-label="닫기">×</button></div>
-  <div id="chatLog" aria-live="polite"></div>
-  <form id="chatForm"><input id="chatIn" maxlength="300" placeholder="규칙, 랭킹, 내 기록을 물어보세요" autocomplete="off"><button>보내기</button></form>
-</section>
 <script>
 // ===== 광고 설정 =====
 // 애드센스 스크립트는 <head>에 들어 있습니다. 승인 후 광고 단위 ID(slot)를 넣으면 게임 아래 광고 칸이 켜집니다.
@@ -241,15 +215,15 @@ function endlessParams(){
 // no=등번호(그래픽 전용), body=상의, num=등번호 색, helmet=헬멧, line=흰 유니폼 테두리, stripe=줄무늬
 const UNIFORMS = [
   { id:'kt', name:'수원 마법사', short:'마법사', no:6,       body:'#1a1a1a', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'samsung', name:'대구 사자', short:'사자', no:36, body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
+  { id:'samsung', name:'대구 사자들', short:'사자들', no:36, body:'#1428a0', num:'#ffffff', helmet:'#1428a0' },
   { id:'kia', name:'광주 호랑이', short:'호랑이', no:7,  body:'#d6001c', num:'#ffffff', helmet:'#1a1a1a' },
   { id:'lg', name:'서울 쌍둥이', short:'쌍둥이', no:33,     body:'#f4f4f6', num:'#1a1a1a', helmet:'#1a1a1a', stripe:'#1a1a1a', line:'#9aa6bd' },
   { id:'doosan', name:'서울 곰돌이', short:'곰돌이', no:31,   body:'#f4f4f6', num:'#131230', helmet:'#131230', line:'#9aa6bd' },
   { id:'ssg', name:'인천 강아지', short:'강아지', no:14,    body:'#ce0e2d', num:'#e6b422', helmet:'#e6b422' },
   { id:'lotte', name:'부산 갈매기', short:'갈매기', no:10, body:'#041e42', num:'#ffffff', helmet:'#041e42' },
-  { id:'nc', name:'창원 공룡', short:'공룡', no:2,   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
+  { id:'nc', name:'창원 공룡들', short:'공룡들', no:2,   body:'#7ab8e6', num:'#0b2a55', helmet:'#0b2a55' },
   { id:'hanwha', name:'대전 독수리', short:'독수리', no:52,   body:'#f37321', num:'#ffffff', helmet:'#1a1a1a' },
-  { id:'kiwoom', name:'서울 영웅', short:'영웅', no:51, body:'#820024', num:'#ffffff', helmet:'#820024' },
+  { id:'kiwoom', name:'서울 영웅들', short:'영웅들', no:51, body:'#820024', num:'#ffffff', helmet:'#820024' },
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
@@ -339,10 +313,7 @@ function nextPitch(){
     banner = { text:`⚡ 레벨 ${endlessLevel() + 1}! 공이 더 빨라져요`, color:'#ff9f43', until: performance.now()+1500 };
   renderDots();
 }
-function setState(s){
-  state = s; stateT = performance.now();
-  document.body.classList.toggle('playing', s !== 'title' && s !== 'end');   // 경기 중에는 AI 채팅 숨김
-}
+function setState(s){ state = s; stateT = performance.now(); }
 
 function swing(){
   if (state !== 'pitch' || pitch.swung) return;
@@ -855,45 +826,6 @@ function layout(){
 window.addEventListener('resize', layout);
 window.addEventListener('orientationchange', () => setTimeout(layout, 200));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', layout);
-
-// ===== AI 채팅 (서버 /api/chat → OpenRouter) =====
-(() => {
-  const btn = $('chatBtn'), box = $('chatBox'), log = $('chatLog'), form = $('chatForm'), inp = $('chatIn'), left = $('chatLeft');
-  const hist = []; let busy = false;
-  // AI 답변의 **굵게** 표시만 굵은 글씨로 바꿈 (먼저 HTML을 이스케이프해서 다른 태그는 그대로 글자로 보임)
-  const show = (d, text, rich) => {
-    if (!rich) { d.textContent = text; return; }
-    d.innerHTML = esc(text).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>');
-  };
-  const add = (role, text) => {
-    const d = document.createElement('div'); d.className = 'cm ' + (role === 'user' ? 'u' : 'a'); show(d, text, role !== 'user');
-    log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
-  };
-  add('assistant', '안녕하세요! 홈런레이스 도우미예요 ⚾\n게임 규칙, 공략, 랭킹, 팀 순위, 내 기록을 물어보세요.');
-  const open = on => { box.hidden = !on; btn.setAttribute('aria-expanded', String(on)); btn.textContent = on ? '×' : '💬'; if (on) inp.focus(); };
-  btn.onclick = () => open(box.hidden);
-  $('chatX').onclick = () => { open(false); btn.focus(); };
-  box.addEventListener('keydown', e => { if (e.key === 'Escape') { open(false); btn.focus(); } });
-  form.onsubmit = async e => {
-    e.preventDefault();
-    const q = inp.value.trim();
-    if (!q || busy) return;
-    busy = true; inp.value = '';
-    add('user', q); hist.push({ role: 'user', content: q });
-    const wait = add('assistant', '생각 중…');
-    try {
-      const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: hist.slice(-10) }) });
-      const j = await r.json().catch(() => ({}));
-      if (typeof j.remaining === 'number') left.textContent = `오늘 ${j.remaining}번 남음`;
-      if (!r.ok) throw new Error(j.error || '');
-      show(wait, j.reply, true); hist.push({ role: 'assistant', content: j.reply });
-    } catch (err) {
-      wait.textContent = err.message && err.message !== 'Failed to fetch' ? err.message : 'AI 도우미에 연결할 수 없어요.';
-      wait.classList.add('err'); hist.pop();   // 실패한 질문은 대화 기록에서 뺌
-    }
-    log.scrollTop = log.scrollHeight; busy = false; inp.focus();
-  };
-})();
 
 showTitle(); renderDots(); layout(); requestAnimationFrame(loop);
 })();
