@@ -233,7 +233,8 @@ const UNIFORMS = [
 ];
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e) { return d; } },
                 set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} } };
-let mode = MODES[store.get('hr_mode','easy')] ? store.get('hr_mode','easy') : 'easy';
+const isMode = m => typeof m === 'string' && Object.hasOwn(MODES, m);   // 'constructor' 같은 객체 기본 속성은 거름
+let mode = isMode(store.get('hr_mode','easy')) ? store.get('hr_mode','easy') : 'easy';
 let uniform = UNIFORMS.find(u => u.id === store.get('hr_uniform','')) || UNIFORMS[0];
 const M = () => mode === 'endless' ? endlessParams() : MODES[mode];
 const isEndless = () => mode === 'endless';
@@ -492,17 +493,29 @@ let lastGame = null;
 const coarse = () => window.matchMedia && matchMedia('(pointer:coarse)').matches;
 const myName = () => { const el = $('nm'); const v = el && el.value.trim(); return (v || store.get('hr_name', '')).trim().slice(0, 12); };
 const fmtMain = g => g.mode === 'endless' ? `홈런 ${g.homers}개` : `${g.score.toLocaleString()}점`;
+// 서버(api/scores.js의 consistent)와 같은 기준: 점수가 홈런 수·최장 비거리로 나올 수 있는 값인지.
+// 링크의 비거리는 소수 첫째 자리로 반올림돼 있으므로 ±0.05m 여유를 둔다.
+const MIN_HR_DIST = 95;
+function possible(c){
+  if (c.homers === 0) return c.score === 0 && c.longest === 0;
+  if (c.longest < MIN_HR_DIST) return false;
+  const events = c.mode === 'endless' ? 0 : EVENTS;
+  const hi = Math.round((c.longest + 0.05) * 100) * (c.homers + Math.min(c.homers, events));
+  const lo = Math.round((c.longest - 0.05) * 100) + (c.homers - 1) * MIN_HR_DIST * 100;
+  return c.score >= lo && c.score <= hi;
+}
 const challenge = (() => {
   try {
     const q = new URLSearchParams(location.search);
     const m = q.get('m');
-    if (!MODES[m] || !q.has('s')) return null;
+    if (!isMode(m) || !q.has('s')) return null;
     const num = (k, max) => { const v = Number(q.get(k)); return Number.isFinite(v) ? Math.min(max, Math.max(0, v)) : 0; };
     const endless = m === 'endless';
     const c = { mode:m, score:Math.floor(num('s', endless ? 5e7 : 320000)), homers:Math.floor(num('h', endless ? 1000 : TOTAL)),
                 longest:num('l', 200), team:teamOf(q.get('t')) ? q.get('t') : '', name:(q.get('n') || '').trim().slice(0, 12) };
-    mode = m;   // 친구가 한 모드로 바로 도전 (저장된 선택은 바꾸지 않음)
     history.replaceState(null, '', location.pathname);   // 새로고침해도 주소가 깔끔하게
+    if (!possible(c)) return null;   // 실제로 나올 수 없는 조합이면 도전장을 보여 주지 않음
+    mode = m;   // 친구가 한 모드로 바로 도전 (저장된 선택은 바꾸지 않음)
     return c;
   } catch(e) { return null; }
 })();
