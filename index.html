@@ -12,7 +12,7 @@
   html,body { margin:0; background:var(--bg); color:var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
   body { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:safe center; padding:16px; gap:10px; }
-  #hud { width:100%; max-width:960px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  #hud { width:100%; max-width:var(--gw, 960px); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .stat { background:var(--panel); border-radius:10px; padding:8px 14px; min-width:110px; }
   .stat .k { font-size:12px; color:var(--muted); }
   .stat .v { font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; }
@@ -21,7 +21,7 @@
   .dot.ev { box-shadow:0 0 0 2px var(--gold) inset; }
   .dot.cur { outline:2px solid var(--accent); outline-offset:2px; }
   .dot.hr { background:#46d37a; } .dot.out { background:#e2544f; } .dot.hr.ev { background:var(--gold); }
-  #wrap { width:100%; max-width:960px; position:relative; }
+  #wrap { width:100%; max-width:var(--gw, 960px); position:relative; }
   canvas { width:100%; height:auto; display:block; border-radius:14px; background:#0e2a17; touch-action:manipulation; cursor:crosshair; user-select:none; -webkit-user-select:none; }
   #overlay { position:absolute; inset:0; display:flex; overflow:auto; border-radius:14px; background:rgba(5,10,20,.78); }
   #overlay.hidden { display:none; }
@@ -93,12 +93,36 @@
   .sw { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:420px; }
   .sw button { margin:0; width:30px; height:30px; flex:none; padding:0; border-radius:50%; border:2px solid rgba(255,255,255,.25); }
   .sw button.on { outline:3px solid var(--gold); outline-offset:2px; }
-  #ad { width:100%; max-width:960px; margin-top:28px; min-height:0; text-align:center; }
+  #ad { width:100%; max-width:var(--gw, 960px); margin-top:28px; min-height:0; text-align:center; }
   #ad:empty { display:none; }
-  .foot { width:100%; max-width:960px; margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-wrap:wrap; gap:6px 10px; justify-content:center; font-size:12px; color:var(--muted); text-align:center; }
+  .foot { width:100%; max-width:var(--gw, 960px); margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-wrap:wrap; gap:6px 10px; justify-content:center; font-size:12px; color:var(--muted); text-align:center; }
   .foot a { color:#b8c4da; }
   .foot .sep { opacity:.5; }
-  .help { color:var(--muted); font-size:13px; text-align:center; }
+  .help { color:var(--muted); font-size:13px; text-align:center; max-width:var(--gw, 960px); }
+  /* 세로 모바일 */
+  html.m body { padding:8px; gap:6px; justify-content:flex-start; }
+  html.m #hud { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+  html.m .stat { min-width:0; padding:5px 10px; }
+  html.m .stat .k { font-size:11px; }
+  html.m .stat .v { font-size:17px; }
+  html.m #balls { grid-column:1 / -1; order:4; justify-content:center; padding:7px 8px; gap:4px; }
+  html.m .dot { width:14px; height:14px; font-size:8px; }
+  html.m canvas, html.m #overlay { border-radius:10px; }
+  html.m #overlay { position:fixed; inset:0; z-index:20; border-radius:0; background:rgba(5,10,20,.96); }
+  html.m .card { padding:16px 12px; }
+  html.m .help { display:none; }
+  html.m .foot { margin-top:0; padding:6px 0 0; font-size:11px; gap:2px 8px; }
+  html.m .pb { height:180px; }
+  /* 가로가 짧은 화면(가로 모드 휴대폰 등) */
+  html.short body { padding:8px; gap:6px; justify-content:flex-start; }
+  html.short .help { display:none; }
+  html.short #hud { max-width:none; flex-wrap:nowrap; gap:6px; }
+  html.short .stat { min-width:0; padding:4px 10px; }
+  html.short .stat .k { font-size:10px; }
+  html.short .stat .v { font-size:15px; }
+  html.short #balls { padding:6px 8px; gap:3px; flex-wrap:nowrap; }
+  html.short .dot { width:12px; height:12px; font-size:7px; }
+  html.short #overlay { position:fixed; inset:0; z-index:20; border-radius:0; background:rgba(5,10,20,.96); }
   @media (max-width:600px){ .stat{min-width:0; padding:6px 10px} .stat .v{font-size:17px} .card h1{font-size:26px} }
 </style>
 </head>
@@ -141,7 +165,7 @@ if (ADSENSE.client && ADSENSE.slot) {
 (() => {
 'use strict';
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-const W = cv.width, H = cv.height;
+let W = cv.width, H = cv.height;   // 화면에 맞춰 layout()이 바꿈 (PC 960×600, 세로 모바일 600×세로길이)
 const $ = id => document.getElementById(id);
 
 const PARK = { line:100, center:122, fence:3.6 };
@@ -313,6 +337,7 @@ function endGame(){
     </div>
     <div class="endbtns"><button id="go">다시 하기</button> <button id="home" class="ghost">처음으로</button></div>`;
   $('overlay').classList.remove('hidden');
+  fitCardSoon();
   $('go').onclick = startGame;
   $('home').onclick = () => { pitch = null; swingT = -1; score = 0; hrCount = 0; results = []; eventSet = new Set(); setState('title'); showTitle(); renderDots(); };
   const nm = $('nm'), sv = $('sv');
@@ -351,7 +376,8 @@ async function loadBoard(el, limit = 10){
       const rows = teams.length
         ? teams.map((t,i) => { const u = teamOf(t.team) || {}; return `<tr class="${t.team===mine?'me':''}"><td>${i+1}</td><td>${teamCell(t.team).replace(u.short || '', u.name || u.short || '')}</td><td>${t.games}</td><td>${t.homers}</td><td>${Number(t.total).toLocaleString()}</td></tr>`; }).join('')
         : '<tr><td colspan="5" class="empty">아직 기록이 없어요</td></tr>';
-      el.querySelector('.pb').innerHTML = `<table class="teams"><tr><th>#</th><th>팀</th><th>판</th><th>홈런</th><th>총점</th></tr>${rows}</table>`;
+      setTimeout(fitCard);
+    el.querySelector('.pb').innerHTML = `<table class="teams"><tr><th>#</th><th>팀</th><th>판</th><th>홈런</th><th>총점</th></tr>${rows}</table>`;
       return;
     }
     const r = await fetch(`/api/scores?mode=${mode}&sort=${boardSort}&limit=${limit}`);
@@ -364,8 +390,10 @@ async function loadBoard(el, limit = 10){
           byDist ? `<td>${Number(s.longest).toFixed(1)}m</td>` : `<td>${s.homers}</td><td>${s.score.toLocaleString()}</td>`}</tr>`).join('')
       : `<tr><td colspan="${byDist?4:5}" class="empty">아직 기록이 없어요</td></tr>`;
     el.querySelector('.pb').innerHTML = `<table class="${byDist?'dist':'pts'}">${th}${rows}</table>`;
+    setTimeout(fitCard);
   } catch(e) {
     el.querySelector('.pb').innerHTML = '<p class="msg">' + esc(e.message || '랭킹 서버에 연결할 수 없어요') + '</p>';
+    setTimeout(fitCard);
   }
 }
 
@@ -427,6 +455,7 @@ function showTitle(){
   });
   $('jnoReset').onclick = () => { jno.value = ''; myNo = ''; store.set('hr_no', ''); };
   refresh();
+  fitCardSoon();
 }
 
 // ===== 입력 =====
@@ -434,7 +463,8 @@ cv.addEventListener('pointerdown', e => { e.preventDefault(); swing(); });
 window.addEventListener('keydown', e => { if (e.target instanceof HTMLInputElement) return; if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (state==='pitch') swing(); } });
 
 // ===== 렌더: 타석 시점 =====
-const HOR = 210, FOC = 750, CAMD = 3, CAMH = 1.2;
+let HOR = 210;   // 지평선 높이: 타자가 화면 아래쪽에 오도록 H에 맞춰 바뀜
+const FOC = 750, CAMD = 3, CAMH = 1.2;
 const proj = (x, y, z) => { const s = FOC/(z+CAMD); return { x: W/2 + x*s, y: HOR + (CAMH-y)*s, s }; };
 
 function drawPitchView(now){
@@ -442,8 +472,10 @@ function drawPitchView(now){
   let g = ctx.createLinearGradient(0,0,0,HOR); g.addColorStop(0,'#0a1630'); g.addColorStop(1,'#1d3360');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,HOR);
   // 관중석 점
-  ctx.fillStyle = '#2b3f6b'; ctx.fillRect(0, HOR-70, W, 70);
-  for (let i=0;i<220;i++){ const x=(i*97)%W, y=HOR-66+((i*37)%58); ctx.fillStyle=['#6a7fae','#c9d3ea','#e2544f','#4fd1ff'][i%4]; ctx.fillRect(x,y,3,3); }
+  const stH = Math.max(70, Math.round((HOR - 60) * 0.55));   // 세로 화면에서는 관중석을 높게
+  ctx.fillStyle = '#2b3f6b'; ctx.fillRect(0, HOR-stH, W, stH);
+  const fans = Math.round(220 * stH / 70);
+  for (let i=0;i<fans;i++){ const x=(i*97)%W, y=HOR-stH+4+((i*37)%(stH-12)); ctx.fillStyle=['#6a7fae','#c9d3ea','#e2544f','#4fd1ff'][i%4]; ctx.fillRect(x,y,3,3); }
   // 외야 펜스
   ctx.fillStyle = '#123f6e'; ctx.fillRect(0, HOR-14, W, 14);
   ctx.fillStyle = '#ffc83d'; ctx.fillRect(0, HOR-14, W, 2);
@@ -528,7 +560,7 @@ function drawPitchView(now){
 }
 
 function drawBatter(now){
-  const bx = W/2 - 175, by = 470;
+  const bx = W/2 - 175, by = HOR + 260;
   let sw = 0; // 0~1 스윙 진행
   if (swingT > 0) sw = clamp((now - swingT)/120, 0, 1);
   ctx.save(); ctx.translate(bx, by);
@@ -555,7 +587,13 @@ function drawBatter(now){
 }
 
 // ===== 렌더: 구장 시점 (위에서) =====
-const HX = W/2, HY = H - 34, SC = (H - 70)/140;
+let HX = W/2, HY = H - 34, SC = (H - 70)/140;
+// 캔버스 크기가 바뀌면 타석·구장 기준점을 다시 계산
+function recalcScene(){
+  HOR = H - 390;
+  SC = Math.min((H - 70) / 140, (W / 2 - 8) / 102);
+  HX = W / 2; HY = Math.min(H - 34, (H + 135 * SC) / 2);
+}
 const fp = (r, deg) => { const a = deg*Math.PI/180; return { x: HX + r*Math.sin(a)*SC, y: HY - r*Math.cos(a)*SC }; };
 
 function drawField(){
@@ -677,7 +715,50 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 
-showTitle(); renderDots(); requestAnimationFrame(loop);
+// ===== 화면 맞춤 =====
+// PC: 게임 화면(960×600 비율)을 창 높이에 맞춰 줄여서 스크롤 없이 한 화면에.
+// 세로 모바일: 캔버스를 세로로 길게(600×?) 그려 화면을 꽉 채우고, 시작·결과 화면은 전체 화면으로 띄움.
+const root = document.documentElement;
+let isMobile = false;
+// 카드 내용이 늦게 채워지는 경우(랭킹 로딩, 글꼴)까지 고려해 여러 번 맞춤
+function fitCardSoon(){ [0, 60, 400, 1200].forEach(t => setTimeout(fitCard, t)); }
+function fitCard(){
+  const card = $('card'), ov = $('overlay');
+  if (!card || ov.classList.contains('hidden')) return;
+  card.style.zoom = 1;
+  const need = card.offsetHeight + 8, avail = ov.clientHeight;
+  let z = Math.min(1, avail / need);
+  if (isMobile) z = Math.max(z, 0.8);
+  if (root.classList.contains('short')) z = Math.max(z, 0.62);   // 모바일은 글씨가 너무 작아지지 않게 (넘치면 살짝 스크롤)
+  card.style.zoom = Math.max(0.55, z).toFixed(3);
+}
+function layout(){
+  const vw = window.innerWidth, vh = window.innerHeight;
+  isMobile = vw < 700 && vh > vw;
+  root.classList.toggle('m', isMobile);
+  root.classList.toggle('short', !isMobile && vh < 560);
+  const hud = $('hud').offsetHeight, gap = isMobile ? 6 : 10, pad = isMobile ? 16 : 32;
+  let nw, nh, cssW;
+  if (isMobile) {
+    cssW = vw - 16;
+    const avail = vh - hud - pad - gap * 2 - document.querySelector('.foot').offsetHeight;
+    nw = 600; nh = Math.round(clamp(600 * avail / cssW, 375, 1000));
+  } else {
+    const short = root.classList.contains('short');   // 가로 모드 휴대폰처럼 세로가 짧으면 안내문·푸터는 화면 아래로
+    const others = hud + (short ? 0 : document.querySelector('.help').offsetHeight + document.querySelector('.foot').offsetHeight);
+    const avail = vh - pad - others - gap * 3 - 20;
+    nw = 960; nh = 600;
+    cssW = Math.max(320, Math.min(960, vw - 32, avail * 1.6));
+  }
+  root.style.setProperty('--gw', Math.floor(cssW) + 'px');
+  if (cv.width !== nw || cv.height !== nh) { cv.width = W = nw; cv.height = H = nh; recalcScene(); }
+  fitCard();
+}
+window.addEventListener('resize', layout);
+window.addEventListener('orientationchange', () => setTimeout(layout, 200));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', layout);
+
+showTitle(); renderDots(); layout(); requestAnimationFrame(loop);
 })();
 </script>
 </body>
