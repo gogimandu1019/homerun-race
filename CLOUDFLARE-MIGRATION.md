@@ -20,15 +20,14 @@ Vercel Pro(월 $20)를 끊고 **무료**인 Cloudflare Pages로 옮기는 순서
    - Framework preset: **None**
    - Build command: **비워 둠**
    - Build output directory: **비워 둠** (저장소의 `wrangler.toml`이 알아서 정함)
-5. **Environment variables**에 아래 3개 추가 (각각 **Encrypt** 체크)
+5. **Environment variables**에 아래 2개 추가 (각각 **Encrypt** 체크)
 
    | 이름 | 값을 어디서 가져오나 |
    |---|---|
    | `SUPABASE_URL` | Supabase → Project Settings → Data API → Project URL |
    | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → secret 키 (`sb_secret_…`) |
-   | `OPENROUTER_API_KEY` | OpenRouter → Keys (Vercel에 넣은 것과 같은 키, 또는 새로 발급) |
 
-   ⚠️ 키는 채팅이나 문서에 붙여넣지 말고 대시보드에만 입력하세요.
+   ⚠️ 키는 Claude 대화나 문서에 붙여넣지 말고 대시보드에만 입력하세요.
 6. **Save and Deploy** → 1~2분 뒤 완료
 
 ## 2단계. 임시 주소에서 확인 (10분)
@@ -37,7 +36,7 @@ Vercel Pro(월 $20)를 끊고 **무료**인 Cloudflare Pages로 옮기는 순서
 
 - [ ] 게임 화면이 뜨고 한 판 플레이 가능
 - [ ] 랭킹(점수·비거리·팀)이 실제 기록으로 보임
-- [ ] 오른쪽 아래 💬 AI 도우미가 답함 (1번만)
+- [ ] `/api/mcp` 가 응답함 (Claude에게 "pages.dev 확인해 줘"라고 하면 같이 확인)
 - [ ] `/guide`, `/privacy` 페이지가 열림
 
 여기까지 문제가 없으면 실제 주소를 옮깁니다. 문제가 있으면 여기서 멈춰도 사이트는 Vercel에서 그대로 돌아갑니다.
