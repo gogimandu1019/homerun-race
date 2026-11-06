@@ -27,12 +27,12 @@
 | 서비스 | 무엇에 쓰나 | 확인 |
 |---|---|---|
 | GitHub `gogimandu1019` | 코드 저장소 (push하면 자동 배포) | ✅ 개인 계정으로 로그인 확인됨 |
-| Vercel (`homerun-race-b3p3` 프로젝트) | 호스팅, 환경변수 | ☐ |
-| Supabase | 랭킹 DB, SQL 실행 | ☐ |
-| 가비아 | 도메인 `homerunracegame.com`, DNS | ☐ |
-| Google AdSense | 광고 (승인 대기) | ☐ |
-| Google Search Console | 구글 검색 등록 | ☐ |
-| 네이버 서치어드바이저 | 네이버 검색 등록 | ☐ |
+| Vercel (`homerun-race-b3p3` 프로젝트) | 호스팅, 환경변수 | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
+| Supabase | 랭킹 DB, SQL 실행 | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
+| 가비아 | 도메인 `homerunracegame.com`, DNS | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
+| Google AdSense | 광고 (승인 대기) | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
+| Google Search Console | 구글 검색 등록 | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
+| 네이버 서치어드바이저 | 네이버 검색 등록 | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
 | OpenRouter | (AI 채팅용이었음, 기능 삭제됨) | 신경 안 써도 됨 |
 
 ---
@@ -226,6 +226,7 @@ Vercel 환경변수:
 - 새 컬럼·테이블이 필요하면 SQL 파일을 만들어 운영자에게 먼저 실행해 달라고 하고, 실행 확인 후 push.
 - 비밀 키(Supabase, OpenRouter 등)는 **대화창에 받지 않고** 운영자가 Vercel/Cloudflare 대시보드에 직접 입력.
 - 대화 기록(개인 메일 포함)은 공개 저장소에 올리지 않고 `backup/`에만 보관.
+- 커밋 작성자는 실명 대신 `gogimandu1019` + GitHub 비공개 메일(`35169281+gogimandu1019@users.noreply.github.com`)로 합니다 (이 맥북 git 전역 설정 완료). 저장소 파일에도 실명을 쓰지 않습니다.
 
 ---
 
@@ -284,11 +285,11 @@ node scripts/preview-server.js
 
 ## 13. 남은 할 일 / 아이디어
 
-- [ ] **0번 계정 점검표** 확인 (교육용 메일로 가입한 서비스가 없는지)
+- [x] **0번 계정 점검표** 확인: 모두 개인 계정 (2026-11-07)
 - [ ] 애드센스 승인 후 광고 단위 ID 넣기 (6번)
 - [ ] 애드센스 ads.txt 상태가 "승인됨"으로 바뀌는지 확인
 - [ ] Cloudflare 이사 (9번, Vercel 결제일 일주일 전)
-- [ ] GitHub 이슈 #1~#5: 수정 완료 답글 달아 둠, 제보자 확인 후 닫기
+- [x] GitHub 이슈 #1~#5: 모두 닫힘 (2026-11-07 확인)
 - [ ] (선택) AI 채팅 잔여물 정리: Vercel `OPENROUTER_API_KEY`, Supabase `chat_usage` (5번)
 - [ ] (선택) 결과 화면 공유 버튼, 타구 결과에 "당겨친/밀어친 홈런" 표시
 - [ ] (선택) 플레이어가 자기 기록 삭제를 요청하면 Supabase Table Editor에서 해당 행 삭제
