@@ -73,6 +73,16 @@
 
 ---
 
+## AI 도우미 채팅
+
+게임 화면 **오른쪽 아래 💬 버튼**을 누르면 AI 도우미에게 규칙, 공략, 랭킹, 팀 순위, 내 기록을 물어볼 수 있습니다.
+
+- 경기 중에는 버튼이 숨겨져 스윙에 방해되지 않습니다.
+- 랭킹·기록 질문은 아래 MCP와 같은 조회 도구로 실제 데이터를 찾아 답합니다.
+- 게임과 관계없는 질문에는 답하지 않으며, 1인당 하루 10번까지 쓸 수 있습니다.
+
+---
+
 ## AI 앱에서 랭킹 보기 (MCP)
 
 Claude 같은 AI 앱에 아래 주소를 추가하면, 대화하면서 홈런레이스 랭킹을 물어볼 수 있습니다.
@@ -115,6 +125,7 @@ https://homerunracegame.com/api/mcp
 |---|---|
 | 게임 화면 | HTML · CSS · JavaScript 한 파일 (`index.html`), Canvas로 그림 |
 | 랭킹 API | Vercel 서버리스 함수 (`api/scores.js`) |
+| AI 채팅 | Vercel 서버리스 함수 (`api/chat.js`) → OpenRouter (기본 모델 Claude Haiku 5.5) |
 | MCP 서버 | Vercel 서버리스 함수 (`api/mcp.js`), Streamable HTTP · JSON 응답 · 상태 없음 |
 | 데이터베이스 | Supabase (`scores` 테이블, `team_standings` 뷰) |
 | 호스팅 | Vercel |
@@ -125,6 +136,8 @@ guide.html            게임 방법 페이지
 privacy.html          개인정보처리방침
 api/scores.js         랭킹 조회(GET) / 기록 저장(POST)
 api/mcp.js            AI 앱용 MCP 서버 (조회 전용)
+api/chat.js           AI 도우미 채팅 (OpenRouter)
+lib/game-tools.js     랭킹·기록 조회 도구 (MCP와 채팅이 같이 사용)
 lib/supabase.js       Supabase 연결 공용 코드
 supabase/*.sql        데이터베이스 테이블·뷰 생성 SQL
 scripts/              로컬 미리보기 서버
@@ -133,10 +146,12 @@ scripts/              로컬 미리보기 서버
 ### 직접 띄워 보려면
 
 1. Supabase 프로젝트를 만들고 SQL Editor에서 `supabase/schema.sql`을 실행합니다.
-   (기존 테이블이 있으면 `002`~`005` SQL을 순서대로 실행)
+   (기존 테이블이 있으면 `002`~`006` SQL을 순서대로 실행)
 2. Vercel에 이 저장소를 연결하고 환경변수 두 개를 넣습니다. 목록은 `.env.example`에 있습니다.
    - `SUPABASE_URL`: Supabase Project URL
    - `SUPABASE_SERVICE_ROLE_KEY`: Supabase secret 키 (`sb_secret_…`). 브라우저 코드나 Git에 넣지 마세요.
+   - `OPENROUTER_API_KEY`: AI 도우미 채팅용 OpenRouter 키 (선택). 없으면 채팅만 "준비 중"으로 나옵니다.
+   - `OPENROUTER_MODEL`: 채팅 모델을 바꿀 때만 (기본 `anthropic/claude-haiku-5.5`)
 3. 배포하면 끝입니다. 로컬에서는 `vercel dev`로 실행할 수 있습니다.
 
 ### 보안

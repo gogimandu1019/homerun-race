@@ -32,9 +32,11 @@ privacy.html               개인정보처리방침
 ads.txt                    애드센스 ads.txt
 api/scores.js              Vercel 서버리스 함수: 랭킹 조회/저장
 api/mcp.js                 AI 앱용 MCP 서버 (조회 전용, https://homerunracegame.com/api/mcp)
+api/chat.js                AI 도우미 채팅 (게임 화면 오른쪽 아래 💬, OpenRouter)
+lib/game-tools.js          랭킹·기록 조회 도구 (MCP와 채팅이 같이 사용)
 lib/supabase.js            Supabase 연결 공용 코드 (두 API가 같이 사용)
 supabase/schema.sql        DB를 처음 만들 때 쓰는 전체 SQL
-supabase/002~005_*.sql     기존 DB에 순서대로 적용한 변경 SQL (005는 익스트림·무한 모드용)
+supabase/002~006_*.sql     기존 DB에 순서대로 적용한 변경 SQL (005 익스트림·무한 모드, 006 AI 채팅 사용량)
 README.md                  설치·배포 방법
 HANDOFF.md                 이 문서
 backup/                    대화 기록 백업 (git에 올리지 않음, 로컬 전용)
@@ -118,9 +120,17 @@ MCP: `POST /api/mcp` (`api/mcp.js`, 2026-11-06 추가)
 - 외부 라이브러리 없이 MCP Streamable HTTP를 JSON 응답·상태 없음으로 직접 구현. GET은 405.
 - 저장 기능은 일부러 넣지 않음 (AI가 가짜 기록을 올리는 것 방지).
 
+AI 채팅: `POST /api/chat` (`api/chat.js`, 2026-11-06 추가)
+- 게임 도우미 역할만 함 (게임과 무관한 질문은 거절). 랭킹 질문은 `lib/game-tools.js` 도구를 AI가 불러 실제 데이터로 답함.
+- 모델: OpenRouter `anthropic/claude-haiku-5.5` (환경변수 `OPENROUTER_MODEL`로 변경 가능), 답변 최대 500토큰.
+- 제한: 1인(IP 해시) 하루 10번, 사이트 전체 하루 1000번. `chat_usage` 테이블 + `chat_take()` 함수 (006 SQL). IP 원본은 저장 안 함.
+- 경기 중(`body.playing`)에는 채팅 버튼·창을 숨김.
+- OpenRouter 대시보드에서 키별 월 사용 한도(credit limit)를 꼭 걸어 둘 것.
+
 Vercel 환경변수:
 - `SUPABASE_URL`: Supabase Project URL
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase **secret** 키 (`sb_secret_…`) 또는 legacy `service_role` 키. `sb_publishable_…`는 안 됩니다.
+- `OPENROUTER_API_KEY`: AI 채팅용. 운영자가 Vercel에 직접 입력 (채팅창·코드에 붙여넣지 않음)
 
 ### ⚠️ DB를 바꿀 때 순서
 새 컬럼이나 뷰가 필요한 변경은 **반드시 SQL을 Supabase SQL Editor에서 먼저 실행한 뒤 코드를 push**해야 합니다. 반대로 하면 그사이 실제 사이트 랭킹이 오류로 멈춥니다.
