@@ -31,6 +31,8 @@ guide.html                 게임 방법 페이지 (애드센스 심사용 콘�
 privacy.html               개인정보처리방침
 ads.txt                    애드센스 ads.txt
 api/scores.js              Vercel 서버리스 함수: 랭킹 조회/저장
+api/mcp.js                 AI 앱용 MCP 서버 (조회 전용, https://homerunracegame.com/api/mcp)
+lib/supabase.js            Supabase 연결 공용 코드 (두 API가 같이 사용)
 supabase/schema.sql        DB를 처음 만들 때 쓰는 전체 SQL
 supabase/002~005_*.sql     기존 DB에 순서대로 적용한 변경 SQL (005는 익스트림·무한 모드용)
 README.md                  설치·배포 방법
@@ -109,6 +111,12 @@ API: `GET/POST /api/scores` (`api/scores.js`)
 - 서버 검증: 이름 1~12자, 비거리 0~200, 팀은 10개 코드 중 하나. 일반 모드는 점수 0~320,000·홈런 0~15, 무한 모드는 점수 0~5천만·홈런 0~1000.
 - 점수가 홈런 수·최장 비거리와 맞는지 검사하고, 같은 이름·모드로 5초 안에 다시 저장하면 막습니다 (GitHub 이슈 #3).
 - 설정이 잘못되면 화면에 원인이 바로 보이게 해 두었습니다 (환경변수 없음, 키 오류, 테이블/컬럼/뷰 없음 등).
+
+MCP: `POST /api/mcp` (`api/mcp.js`, 2026-11-06 추가)
+- Claude 등 AI 앱의 "커스텀 커넥터"에 주소만 넣으면 누구나 쓰는 **조회 전용** 서버. 로그인 없음.
+- 도구: `get_leaderboard`, `get_team_standings`, `get_player_records`, `get_game_info`
+- 외부 라이브러리 없이 MCP Streamable HTTP를 JSON 응답·상태 없음으로 직접 구현. GET은 405.
+- 저장 기능은 일부러 넣지 않음 (AI가 가짜 기록을 올리는 것 방지).
 
 Vercel 환경변수:
 - `SUPABASE_URL`: Supabase Project URL

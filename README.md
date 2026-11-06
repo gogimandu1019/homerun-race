@@ -73,6 +73,30 @@
 
 ---
 
+## AI 앱에서 랭킹 보기 (MCP)
+
+Claude 같은 AI 앱에 아래 주소를 추가하면, 대화하면서 홈런레이스 랭킹을 물어볼 수 있습니다.
+
+```
+https://homerunracegame.com/api/mcp
+```
+
+- **Claude (웹·데스크톱)**: 설정 → 커넥터 → 커스텀 커넥터 추가 → 위 주소 입력
+- **Claude Code**: `claude mcp add --transport http homerun-race https://homerunracegame.com/api/mcp`
+
+예시 질문: "홈런레이스 무한 모드 1위 누구야?", "하드 모드 팀 순위 알려줘", "감자 닉네임 기록 찾아줘"
+
+| 도구 | 하는 일 |
+|---|---|
+| `get_leaderboard` | 모드별 랭킹 (점수·비거리·홈런 수 순) |
+| `get_team_standings` | 모드별 팀 순위 |
+| `get_player_records` | 닉네임으로 모드별 최고 기록 찾기 |
+| `get_game_info` | 게임 규칙과 모드 안내 |
+
+**조회만 가능**하며, 기록을 저장하거나 바꾸는 기능은 없습니다. 로그인도 필요 없습니다.
+
+---
+
 ## 페이지
 
 | 주소 | 내용 |
@@ -91,6 +115,7 @@
 |---|---|
 | 게임 화면 | HTML · CSS · JavaScript 한 파일 (`index.html`), Canvas로 그림 |
 | 랭킹 API | Vercel 서버리스 함수 (`api/scores.js`) |
+| MCP 서버 | Vercel 서버리스 함수 (`api/mcp.js`), Streamable HTTP · JSON 응답 · 상태 없음 |
 | 데이터베이스 | Supabase (`scores` 테이블, `team_standings` 뷰) |
 | 호스팅 | Vercel |
 
@@ -99,6 +124,8 @@ index.html            게임
 guide.html            게임 방법 페이지
 privacy.html          개인정보처리방침
 api/scores.js         랭킹 조회(GET) / 기록 저장(POST)
+api/mcp.js            AI 앱용 MCP 서버 (조회 전용)
+lib/supabase.js       Supabase 연결 공용 코드
 supabase/*.sql        데이터베이스 테이블·뷰 생성 SQL
 scripts/              로컬 미리보기 서버
 ```
