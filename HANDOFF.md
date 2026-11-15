@@ -45,7 +45,7 @@
 | 주소 | https://homerunracegame.com (www, http로 들어와도 여기로 모임) |
 | 예비 주소 | https://homerun-race-b3p3.vercel.app |
 | 코드 | GitHub `gogimandu1019/homerun-race` (**공개 저장소**), 로컬 `~/dev/homerun-race` |
-| 호스팅 | Vercel **Pro** (월 $20). **Cloudflare Pages(무료)로 이사 예정**, 준비 완료 (9번) |
+| 호스팅 | Vercel **Hobby**(2026-11-15 다운그레이드) → **Cloudflare Pages(무료)로 이사 중** (9번) |
 | DB | Supabase (`scores` 테이블 + `team_standings` 뷰) |
 | 도메인 | 가비아에서 구매한 `homerunracegame.com` (1년 약 2만 원), DNS도 가비아에서 관리 |
 | 광고 | Google AdSense 게시자 `ca-pub-6809693934342715`, **검토 대기 중** |
@@ -70,6 +70,9 @@ ads.txt                    애드센스 ads.txt
 og-image.jpg               링크 미리보기 이미지 (1200×630)
 sitemap.xml, robots.txt    검색엔진용
 api/scores.js              서버 함수: 랭킹 조회/저장
+functions/                 Cloudflare용 함수 입구 (api/*.js를 감쌈), wrangler.toml·_routes.json도 Cloudflare 설정
+vercel.json                Vercel cleanUrls (/guide.html → /guide)
+CLOUDFLARE-MIGRATION.md    Cloudflare 이사 안내서
 api/mcp.js                 AI 앱용 MCP 서버 (조회 전용)
 lib/game-tools.js          랭킹·기록 조회 도구 (MCP 서버가 사용)
 lib/supabase.js            Supabase 연결 공용 코드 (두 API가 같이 사용)
@@ -84,7 +87,7 @@ backup/                    대화 기록 백업 (git에 올리지 않음, 이 �
 
 브랜치
 - `main`: 실제 사이트
-- `cloudflare-migration`: Cloudflare 이사 준비분 (GitHub에 백업됨, 아직 배포 안 함. 9번)
+- `cloudflare-migration`: 예전 이사 준비분. 2026-11-15에 main으로 옮겨서 더 안 씀
 
 ---
 
@@ -244,15 +247,15 @@ Vercel 환경변수:
 
 ---
 
-## 9. 호스팅 이사: Vercel Pro → Cloudflare Pages (준비 완료, 실행 전)
+## 9. 호스팅 이사: Vercel → Cloudflare Pages (2026-11-15 진행 중)
 
-- 이유: Vercel Pro 월 $20 고정비 > 예상 광고 수익. Cloudflare Pages는 무료이고 광고 허용.
-- 준비분: **`cloudflare-migration` 브랜치** (GitHub 백업 완료). 안내서: 그 브랜치의 `CLOUDFLARE-MIGRATION.md`
-  - `functions/`가 `api/*.js`를 그대로 감싸서 Cloudflare에서도 같은 코드가 돌아감 (Wrangler 로컬 테스트 통과)
-  - `vercel.json` cleanUrls로 `/guide.html` → `/guide` (Cloudflare와 주소 맞춤)
-- 할 일 순서: ① 브랜치를 main에 합치고 push → ② Cloudflare 가입·GitHub 연결·환경변수 2개 → ③ `*.pages.dev`에서 확인 → ④ 가비아 네임서버 변경 → ⑤ Vercel 도메인 제거·Pro 해지
-- 🗓 **Vercel 다음 결제일(Billing → Next invoice) 일주일 전쯤** 시작. 결제일은 월말이 아니라 Pro 업그레이드한 날(11월 5일경) 기준일 수 있음.
-- 브랜치를 합칠 때 이 HANDOFF.md에서 충돌이 날 수 있음 → main 쪽(이 문서)을 기준으로 정리.
+- 이유: Vercel Pro 월 $20 고정비 > 예상 광고 수익. Cloudflare Pages는 무료이고 광고 허용. (Vercel Hobby는 약관상 광고 등 상업적 사용 불가)
+- 2026-11-15: 운영자가 Vercel을 **Hobby로 다운그레이드**(환불). 같은 날 이사용 코드를 main에 넣음:
+  - `functions/`가 `api/*.js`를 그대로 감싸서 Cloudflare에서도 같은 코드가 돌아감 (Wrangler 로컬 테스트 통과: 페이지 6개, `/api/scores`, `/api/mcp`)
+  - `vercel.json` cleanUrls + 모든 링크·canonical·사이트맵을 `.html` 없는 주소(`/guide`, `/about` …)로 통일. Cloudflare는 `/guide.html`을 `/guide`로 308 리다이렉트
+  - 안내서: `CLOUDFLARE-MIGRATION.md` (대시보드 클릭 순서, 되돌리는 법)
+- 남은 순서: ② Cloudflare 가입·GitHub 연결·환경변수 2개 → ③ `homerun-race.pages.dev`에서 확인 → ④ 가비아 네임서버 변경 → ⑤ Vercel 도메인 제거
+- `cloudflare-migration` 브랜치는 main에 다 옮겼으므로 더 쓰지 않음 (지워도 됨)
 
 ---
 

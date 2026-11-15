@@ -5,7 +5,7 @@ Vercel Pro(월 $20)를 끊고 **무료**인 Cloudflare Pages로 옮기는 순서
 
 - 주소(homerunracegame.com), 랭킹 DB(Supabase), 애드센스, 검색 등록은 **그대로**입니다.
 - 이사하는 동안에도 사이트는 멈추지 않습니다. Vercel은 마지막 단계에서 끕니다.
-- 🗓 **언제**: Vercel 다음 결제일(Settings → Billing → Next invoice) **일주일 전**쯤 시작하세요.
+- 🗓 2026-11-15: Vercel은 이미 Hobby로 다운그레이드함. Hobby는 약관상 광고(상업적 사용)가 안 되므로, 애드센스 재검토 전에 이사를 마치는 게 좋습니다.
 
 ---
 
@@ -37,7 +37,8 @@ Vercel Pro(월 $20)를 끊고 **무료**인 Cloudflare Pages로 옮기는 순서
 - [ ] 게임 화면이 뜨고 한 판 플레이 가능
 - [ ] 랭킹(점수·비거리·팀)이 실제 기록으로 보임
 - [ ] `/api/mcp` 가 응답함 (Claude에게 "pages.dev 확인해 줘"라고 하면 같이 확인)
-- [ ] `/guide`, `/privacy` 페이지가 열림
+- [ ] `/guide`, `/baseball`, `/updates`, `/about`, `/privacy` 페이지가 열림
+- [ ] `/ads.txt`, `/sitemap.xml` 이 열림
 
 여기까지 문제가 없으면 실제 주소를 옮깁니다. 문제가 있으면 여기서 멈춰도 사이트는 Vercel에서 그대로 돌아갑니다.
 
@@ -60,7 +61,7 @@ Vercel Pro(월 $20)를 끊고 **무료**인 Cloudflare Pages로 옮기는 순서
    - MCP: `https://homerunracegame.com/api/mcp` 도 Claude에서 그대로 동작해야 함
    - 애드센스 `https://homerunracegame.com/ads.txt` 가 열리는지
 2. 이상 없으면 Vercel → 프로젝트 → Settings → **Domains**에서 `homerunracegame.com`, `www` 제거
-3. Vercel → 팀 Settings → **Billing** → Pro 해지(Downgrade to Hobby)
+3. ~~Vercel Pro 해지~~ (2026-11-15에 이미 Hobby로 다운그레이드함)
 4. 일주일쯤 문제없으면 Vercel 프로젝트는 지워도 됩니다
 
 ## 되돌리기 (문제가 생기면)
