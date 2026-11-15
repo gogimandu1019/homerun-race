@@ -27,7 +27,8 @@
 | 서비스 | 무엇에 쓰나 | 확인 |
 |---|---|---|
 | GitHub `gogimandu1019` | 코드 저장소 (push하면 자동 배포) | ✅ 개인 계정으로 로그인 확인됨 |
-| Vercel (`homerun-race-b3p3` 프로젝트) | 호스팅, 환경변수 | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
+| Cloudflare (Pages 프로젝트 `homerun-race`, 도메인 DNS) | 호스팅, 환경변수, DNS (2026-11-15부터) | ☐ 개인 메일인지 확인 |
+| Vercel (`homerun-race-b3p3` 프로젝트) | 예전 호스팅 (도메인 제거 후 정리 예정) | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
 | Supabase | 랭킹 DB, SQL 실행 | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
 | 가비아 | 도메인 `homerunracegame.com`, DNS | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
 | Google AdSense | 광고 (승인 대기) | ✅ 개인 계정 (운영자 확인, 2026-11-07) |
@@ -43,9 +44,9 @@
 |---|---|
 | 서비스 | 홈런레이스: 날아오는 공에 타이밍 맞춰 스윙해 홈런 비거리를 겨루는 웹 야구 게임 |
 | 주소 | https://homerunracegame.com (www, http로 들어와도 여기로 모임) |
-| 예비 주소 | https://homerun-race-b3p3.vercel.app |
+| 예비 주소 | https://homerun-race.pages.dev |
 | 코드 | GitHub `gogimandu1019/homerun-race` (**공개 저장소**), 로컬 `~/dev/homerun-race` |
-| 호스팅 | Vercel **Hobby**(2026-11-15 다운그레이드) → **Cloudflare Pages(무료)로 이사 중** (9번) |
+| 호스팅 | **Cloudflare Pages (무료)**, 2026-11-15 이사 완료 (9번). DNS도 Cloudflare (가비아는 도메인 등록만) |
 | DB | Supabase (`scores` 테이블 + `team_standings` 뷰) |
 | 도메인 | 가비아에서 구매한 `homerunracegame.com` (1년 약 2만 원), DNS도 가비아에서 관리 |
 | 광고 | Google AdSense 게시자 `ca-pub-6809693934342715`, **검토 대기 중** |
@@ -53,7 +54,7 @@
 | AI 커넥터 | MCP 서버 `https://homerunracegame.com/api/mcp` (랭킹 조회 전용) |
 | 운영자 문의 메일 | gogimandu.official@gmail.com (사이트 하단에 공개) |
 
-배포 방식: `main` 브랜치에 push하면 Vercel이 자동으로 배포합니다 (1~2분).
+배포 방식: `main` 브랜치에 push하면 Cloudflare Pages가 자동으로 배포합니다 (1~2분). 배포 기록은 Cloudflare → Workers & Pages → homerun-race → Deployments.
 
 ---
 
@@ -184,7 +185,7 @@ AI 채팅(오른쪽 아래 💬, OpenRouter + Claude Haiku 5.5)은 2026-11-06에
   drop table if exists public.chat_usage;
   ```
 
-Vercel 환경변수:
+Cloudflare Pages 환경변수 (Settings → Variables and Secrets → Production, 바꾼 뒤 Retry deployment 필요):
 - `SUPABASE_URL`: Supabase Project URL
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase **secret** 키 (`sb_secret_…`) 또는 legacy `service_role` 키. `sb_publishable_…`는 안 됩니다.
 
@@ -247,14 +248,22 @@ Vercel 환경변수:
 
 ---
 
-## 9. 호스팅 이사: Vercel → Cloudflare Pages (2026-11-15 진행 중)
+## 9. 호스팅 이사: Vercel → Cloudflare Pages (2026-11-15 완료)
 
 - 이유: Vercel Pro 월 $20 고정비 > 예상 광고 수익. Cloudflare Pages는 무료이고 광고 허용. (Vercel Hobby는 약관상 광고 등 상업적 사용 불가)
 - 2026-11-15: 운영자가 Vercel을 **Hobby로 다운그레이드**(환불). 같은 날 이사용 코드를 main에 넣음:
   - `functions/`가 `api/*.js`를 그대로 감싸서 Cloudflare에서도 같은 코드가 돌아감 (Wrangler 로컬 테스트 통과: 페이지 6개, `/api/scores`, `/api/mcp`)
   - `vercel.json` cleanUrls + 모든 링크·canonical·사이트맵을 `.html` 없는 주소(`/guide`, `/about` …)로 통일. Cloudflare는 `/guide.html`을 `/guide`로 308 리다이렉트
   - 안내서: `CLOUDFLARE-MIGRATION.md` (대시보드 클릭 순서, 되돌리는 법)
-- 남은 순서: ② Cloudflare 가입·GitHub 연결·환경변수 2개 → ③ `homerun-race.pages.dev`에서 확인 → ④ 가비아 네임서버 변경 → ⑤ Vercel 도메인 제거
+- 진행: ② Cloudflare Pages 프로젝트 `homerun-race` 생성·환경변수 2개 ✅ (처음에 Worker로 잘못 만들어져 실패 → Pages로 다시 만듦) → ③ `https://homerun-race.pages.dev` 확인 ✅ (페이지·랭킹 5종이 Vercel과 동일, MCP 정상) → ④ 가비아 네임서버를 Cloudflare(`magnolia`, `weston`)로 변경 ✅ → ⑤ Pages에 `homerunracegame.com`·`www` 연결 ✅ (DNS: 둘 다 CNAME → `homerun-race.pages.dev`, Proxied. Pages에서 Verifying이 한동안 떠 있다가 기다리니 Active) → ⑥ 실제 주소 점검 ✅ (페이지·랭킹·MCP·ads.txt·robots.txt, 인증서 Google Trust Services) → ⑦ Vercel 도메인은 **11월 17일 이후 제거** (아래 주의)
+- ⚠️ **네임서버를 바꾼 뒤 최대 이틀은 예전 주소로 가는 사람이 있음.** `.com`의 네임서버 정보 유효기간이 48시간이라, KT DNS(168.126.63.1) 등은 그동안 가비아 네임서버(아직 A 216.150.1.1 = Vercel)에 물어봄. 11-15에 Vercel에서 도메인을 바로 뺐더니 KT 사용자에게 `404 DEPLOYMENT_NOT_FOUND`가 남 → Vercel에 두 도메인을 **리디렉션 없이 Production으로** 다시 추가해서 해결("Invalid Configuration" 표시는 무시). 지금은 Vercel·Cloudflare 양쪽에서 같은 코드·같은 DB로 서비스됨.
+- 11월 17일 이후: `dig +short A homerunracegame.com @168.126.63.1`이 Cloudflare 주소(104.21.x / 172.67.x)를 돌려주면 Vercel에서 도메인 제거 → 일주일 뒤 Vercel 프로젝트 삭제
+- 🔙 **되돌리기용: 이사 전 가비아 DNS (네임서버 ns.gabia.co.kr, 2026-11-05 설정)**
+  | 타입 | 호스트 | 값 | TTL |
+  |---|---|---|---|
+  | A | @ | 216.150.1.1 | 600 |
+  | CNAME | www | a9fecc9f55155faa.vercel-dns-017.com. | 600 |
+  - 이 두 개뿐. 구글 서치 콘솔·네이버는 HTML 태그(meta)로 소유 확인해서 DNS TXT 기록이 필요 없음.
 - `cloudflare-migration` 브랜치는 main에 다 옮겼으므로 더 쓰지 않음 (지워도 됨)
 
 ---
@@ -266,7 +275,7 @@ node scripts/preview-server.js
 ```
 → http://localhost:8770 을 Claude 내부 브라우저로 열기
 
-- 이 폴더의 파일을 그대로 보여주고, `/api/*` 조회는 실제 사이트(`homerun-race-b3p3.vercel.app`)에서 curl로 읽어옵니다.
+- 이 폴더의 파일을 그대로 보여주고, `/api/*` 조회는 실제 사이트(`homerunracegame.com`)에서 curl로 읽어옵니다. `/guide`처럼 확장자 없는 주소도 됩니다.
 - 실제 랭킹에 테스트 기록이 쌓이지 않도록 미리보기에서 **점수 저장(POST)은 막아둡니다**.
 - 이 컴퓨터(127.0.0.1)에서만 열리고, 점(.)으로 시작하는 파일(비밀 키 파일, .git)은 내주지 않습니다 (이슈 #4).
 
@@ -290,7 +299,7 @@ node scripts/preview-server.js
 | 익스트림·무한 모드 추가 | 베타테스터 피드백 (2026-11-06). 무한은 아웃 3개, 점점 어려워짐 |
 | 팀 순위표 (총점 합계) | "팀의 명예를 건 경쟁" |
 | 구단명 → 지역+닉네임, 짧은 이름 세 글자 통일 | 광고 붙일 때 상표 문제 방지 / 글자 수 맞춤 |
-| Vercel Hobby → Pro → (예정) Cloudflare | Hobby 약관상 광고 금지 → Pro 결제 → 고정비 부담으로 무료 Cloudflare 이사 준비 |
+| Vercel Hobby → Pro → Cloudflare Pages | Hobby 약관상 광고 금지 → Pro 결제 → 고정비 부담으로 2026-11-15 무료 Cloudflare로 이사 |
 | 개인정보처리방침 + 게임 방법 페이지 | 애드센스 정책(쿠키 고지)과 심사(콘텐츠 분량) 대비 |
 | 도메인 `.com` 유지 | 저렴한 도메인은 갱신비가 비싸고 신뢰도 낮음, 이미 검색·애드센스 등록됨 |
 | MCP는 조회 전용 | AI가 기록을 저장·조작하지 못하게 |
@@ -305,7 +314,9 @@ node scripts/preview-server.js
 - [x] **0번 계정 점검표** 확인: 모두 개인 계정 (2026-11-07)
 - [ ] 애드센스 승인 후 광고 단위 ID 넣기 (6번)
 - [ ] 애드센스 ads.txt 상태가 "승인됨"으로 바뀌는지 확인
-- [ ] Cloudflare 이사 (9번, Vercel 결제일 일주일 전)
+- [x] Cloudflare 이사 (2026-11-15 완료)
+- [ ] **11월 17일 이후** KT DNS가 Cloudflare를 가리키는지 확인하고 Vercel 도메인 제거 (9번), 일주일 뒤 Vercel 프로젝트 삭제
+- [ ] Cloudflare 계정 로그인 메일이 개인 메일인지 확인 (0번 점검표)
 - [x] GitHub 이슈 #1~#5: 모두 닫힘 (2026-11-07 확인)
 - [ ] (선택) AI 채팅 잔여물 정리: Vercel `OPENROUTER_API_KEY`, Supabase `chat_usage` (5번)
 - [x] 결과 화면 공유 버튼 (이미지로 저장 / 링크로 공유, 2026-11-07, 5번 "기록 공유" 참고)

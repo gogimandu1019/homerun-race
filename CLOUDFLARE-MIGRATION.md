@@ -1,5 +1,8 @@
 # Cloudflare Pages 이사 안내
 
+> ✅ **2026-11-15 이사 완료.** 지금 사이트는 Cloudflare Pages에서 돌아갑니다. 아래는 기록용이며, 다른 호스팅으로 옮기거나 되돌릴 때 참고하세요.
+> 실제로 겪은 일: 처음에 Worker로 만들어져 `wrangler deploy` 오류 → Pages로 다시 만듦 / 환경변수는 넣은 뒤 Retry deployment 필요 / 도메인 연결 후 Verifying이 한동안 떠 있다가 기다리니 Active.
+
 Vercel Pro(월 $20)를 끊고 **무료**인 Cloudflare Pages로 옮기는 순서입니다.
 코드는 이미 양쪽에서 돌아가게 준비돼 있어서(2026-11-06), 아래는 **대시보드에서 클릭하는 일**만 남았습니다.
 
