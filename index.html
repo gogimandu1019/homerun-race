@@ -120,6 +120,20 @@
   #shot p { margin:0; font-size:14px; color:var(--text); }
   #ad { width:100%; max-width:var(--gw, 960px); margin-top:28px; min-height:0; text-align:center; }
   #ad:empty { display:none; }
+  /* 게임 아래 읽을거리 (검색엔진·애드센스 심사도 이 글을 읽음) */
+  .about { width:100%; max-width:min(var(--gw, 960px), 760px); margin-top:36px; color:#c7d2e4; font-size:15px; line-height:1.75; }
+  .about h2 { font-size:19px; color:var(--text); margin:34px 0 10px; }
+  .about h2:first-child { margin-top:0; }
+  .about p { margin:0 0 10px; }
+  .about a { color:var(--accent); }
+  .about b { color:var(--text); }
+  .about ul { margin:0 0 10px; padding-left:20px; }
+  .about li { margin-bottom:6px; }
+  .modes { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin:0 0 10px; }
+  .modes div { background:var(--panel); border:1px solid #26324a; border-radius:12px; padding:12px 14px; font-size:14px; line-height:1.6; }
+  .modes h3 { margin:0 0 4px; font-size:15px; color:var(--gold); }
+  .modes p { margin:0; }
+  @media (max-width:600px){ .modes { grid-template-columns:1fr; } .about { font-size:14px; } .about h2 { font-size:17px; } }
   .foot { width:100%; max-width:var(--gw, 960px); margin-top:20px; padding:14px 0 4px; border-top:1px solid #1d2840; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; color:var(--muted); text-align:center; }
   .foot a { color:#b8c4da; }
   .foot .sep { opacity:.5; margin:0 4px; }
@@ -133,7 +147,8 @@
   html.m #balls { grid-column:1 / -1; order:4; justify-content:center; padding:7px 8px; gap:4px; }
   html.m .dot { width:14px; height:14px; font-size:8px; }
   html.m canvas, html.m #overlay { border-radius:10px; }
-  html.m #overlay { position:fixed; inset:0; z-index:20; border-radius:0; background:rgba(5,10,20,.96); }
+  html.m #overlay { background:rgba(5,10,20,.96); }   /* 시작 화면은 게임 칸만 덮음: 아래 소개 글까지 스크롤 가능 */
+  html.m #overlay.full { position:fixed; inset:0; z-index:20; border-radius:0; }   /* 결과 화면은 내용이 길어 전체 화면 */
   html.m .card { padding:16px 12px; }
   html.m .help { display:none; }
   html.m .foot { margin-top:0; padding:6px 0 0; font-size:11px; gap:2px; }
@@ -165,6 +180,37 @@
 <div class="help">공이 원 안으로 들어오는 순간 <b>클릭 / 탭 / 스페이스바</b>로 스윙! · 빠르면 좌측, 늦으면 우측으로 날아갑니다.</div>
 <!-- 광고: 게임 화면과 충분히 떨어진 아래쪽에만 둡니다 (실수 클릭 방지) -->
 <div id="ad"></div>
+<section class="about">
+  <h2>⚾ 홈런레이스는 어떤 게임인가요?</h2>
+  <p>홈런레이스는 투수가 던진 공에 타이밍을 맞춰 방망이를 휘두르고, 담장을 넘긴 홈런의 <b>비거리</b>로 점수를 겨루는 웹 야구 게임입니다. 설치나 회원가입 없이 PC와 휴대폰 브라우저에서 바로 즐길 수 있고, 한 경기는 1분 남짓이면 끝나요.</p>
+  <p>조작은 딱 하나입니다. 공이 도착하는 순간에 화면을 클릭하거나 탭하면 됩니다. 대신 100분의 1초 차이로 PERFECT와 GOOD이 갈리기 때문에, 쉬워 보여도 기록을 올리려면 꽤 집중해야 합니다.</p>
+
+  <h2>네 가지 모드</h2>
+  <div class="modes">
+    <div><h3>이지</h3><p>115~140km/h. 공이 느리게 보이고 판정이 넉넉해서 처음 하는 분께 맞아요. 15구 중 5구는 점수 2배 이벤트.</p></div>
+    <div><h3>하드</h3><p>130~155km/h. PERFECT 범위가 이지의 절반 이하라, 손맛과 기록 경쟁을 원하는 분께 추천해요.</p></div>
+    <div><h3>익스트림</h3><p>최고 165km/h에 PERFECT 판정은 ±0.009초. 하드가 쉬워졌다면 여기서 진짜 실력을 확인해 보세요.</p></div>
+    <div><h3>무한</h3><p>아웃 3개가 될 때까지 계속 칩니다. 홈런 5개마다 공이 빨라져서, 30개를 넘기면 익스트림 수준이 돼요.</p></div>
+  </div>
+
+  <h2>점수는 이렇게 매겨요</h2>
+  <p>홈런 하나의 점수는 <b>비거리(m) × 100점</b>입니다. 125.3m 홈런이면 12,530점이고, 금색으로 빛나는 2배 이벤트 공이었다면 25,060점이에요. 담장을 넘기지 못한 타구는 0점이라, 한 경기 점수는 결국 "홈런을 몇 개, 얼마나 멀리 쳤는가"로 정해집니다.</p>
+  <p>구장은 파울라인까지 100m, 가운데까지 122m인 둥근 펜스입니다. 공을 일찍 치면 왼쪽, 늦게 치면 오른쪽으로 날아가요. 파울라인 쪽은 넘기기 쉽지만 거리가 짧고, 가운데로 넘긴 홈런일수록 점수가 큽니다.</p>
+
+  <h2>혼자보다 같이: 팀 순위와 도전장</h2>
+  <p>시작 화면에서 10개 팀 유니폼 중 하나를 고르면, 점수를 저장할 때 그 팀 기록으로 함께 쌓입니다. 랭킹의 <b>팀</b> 탭에서 어느 팀 팬들이 가장 많이 담장을 넘겼는지 볼 수 있어요. 팀 이름과 색은 게임용으로 만든 것이며 실제 프로야구 구단과는 관련이 없습니다.</p>
+  <p>경기가 끝나면 결과 화면에서 <b>이미지로 저장</b>을 눌러 기록 카드를 남기거나, <b>링크로 공유</b>로 친구에게 도전장을 보낼 수 있습니다. 링크를 받은 친구는 같은 모드로 바로 도전하고, 경기가 끝나면 내 기록과 몇 점 차이인지 확인할 수 있어요.</p>
+
+  <h2>플레이어 의견으로 바뀐 것들</h2>
+  <p>홈런레이스는 야구를 좋아하는 개인이 만들고 있는 게임이고, 베타테스터와 플레이어들의 의견을 받아 계속 고쳐 왔습니다.</p>
+  <ul>
+    <li>"PERFECT인데 펜스를 맞히는 건 너무하다"는 의견에 따라, 지금은 <b>PERFECT 판정이면 무조건 홈런</b>입니다.</li>
+    <li>처음에는 실제 구장처럼 넓은 구장이었는데 홈런이 너무 안 나와서, 지금의 둥근 펜스 구장으로 바꾸고 타구 속도를 다시 맞췄습니다.</li>
+    <li>"더 어려운 모드", "끝없이 치는 모드"를 원한다는 요청으로 익스트림과 무한 모드가 생겼습니다.</li>
+    <li>점수뿐 아니라 응원팀끼리 겨루고 싶다는 의견으로 팀 순위표를 만들었습니다.</li>
+  </ul>
+  <p>게임에 대한 의견이나 버그 제보는 언제든 아래 메일로 보내 주세요. 판정 기준과 공략 팁은 <a href="/guide.html">게임 방법</a> 페이지에 자세히 정리해 두었습니다.</p>
+</section>
 <footer class="foot">
   <div>건의사항·문의 <a href="mailto:gogimandu.official@gmail.com">gogimandu.official@gmail.com</a></div>
   <div><a href="/guide.html">게임 방법</a> <span class="sep">|</span> <a href="/privacy.html">개인정보처리방침</a></div>
@@ -395,6 +441,7 @@ function endGame(){
     </div>
     <div class="endbtns"><button id="go">다시 하기</button> <button id="home" class="ghost">처음으로</button></div>`;
   $('overlay').classList.remove('hidden');
+  $('overlay').classList.add('full');
   fitCardSoon();
   $('go').onclick = startGame;
   $('home').onclick = () => { pitch = null; swingT = -1; score = 0; hrCount = 0; results = []; eventSet = new Set(); setState('title'); showTitle(); renderDots(); };
@@ -634,6 +681,7 @@ async function shareLink(){
 }
 
 function showTitle(){
+  $('overlay').classList.remove('full');
   $('card').innerHTML = `<h1>⚾ 홈런레이스</h1>${challengeBanner()}
     <div id="rules"></div>
     <div class="opt"><span class="ol">난이도</span>
