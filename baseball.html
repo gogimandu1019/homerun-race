@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>홈런 속 야구 상식 · 홈런레이스</title>
+<link rel="canonical" href="https://homerunracegame.com/baseball.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="홈런레이스">
+<meta property="og:title" content="홈런 속 야구 상식 · 홈런레이스">
+<meta property="og:description" content="투수의 공이 도착하는 시간, 타구 속도와 발사각에 따른 비거리, 담장 높이, 당겨치기와 밀어치기 원리를 홈런레이스의 실제 계산으로 정리했습니다.">
+<meta property="og:url" content="https://homerunracegame.com/baseball.html">
+<meta property="og:image" content="https://homerunracegame.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="투수의 공이 도착하는 시간, 타구 속도와 발사각에 따른 비거리, 담장 높이, 당겨치기와 밀어치기 원리를 홈런레이스의 실제 계산으로 정리했습니다.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6809693934342715"
+     crossorigin="anonymous"></script>
+<style>
+  :root { --bg:#0b1220; --panel:#131c2e; --text:#eef2f8; --muted:#8fa0bb; --gold:#ffc83d; --line:#26324a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; line-height:1.75; }
+  a { color:var(--gold); }
+  h1 { font-size:30px; margin:26px 0 6px; }
+  .lead { color:#c7d2e4; font-size:16px; margin:0 0 8px; }
+  h2 { font-size:19px; margin:34px 0 10px; padding-top:22px; border-top:1px solid var(--line); }
+  h3 { font-size:16px; margin:20px 0 6px; }
+  p, li { color:#c7d2e4; font-size:15px; }
+  ul, ol { padding-left:22px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin:10px 0; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; white-space:nowrap; }
+  td.n, th.n { text-align:right; }
+  .box { background:var(--panel); border-radius:12px; padding:14px 18px; margin:14px 0; }
+  .cta { display:inline-block; margin-top:10px; background:var(--gold); color:#1a1300; font-weight:800; padding:10px 24px; border-radius:999px; text-decoration:none; }
+  small { color:var(--muted); }
+  .date { color:var(--gold); font-weight:700; }
+  .nav { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px 16px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+  .nav .brand { color:var(--text); font-weight:800; font-size:16px; text-decoration:none; }
+  .nav .links { display:flex; gap:6px 14px; flex-wrap:wrap; }
+  .nav .links a { color:#c7d2e4; font-size:14px; text-decoration:none; }
+  .nav .links a.on { color:var(--gold); font-weight:700; }
+  .foot { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); text-align:center; line-height:1.9; }
+  .foot a { color:#b8c4da; }
+  .foot .sep { opacity:.5; margin:0 4px; }
+</style>
+</head>
+<body>
+<main>
+  <nav class="nav"><a class="brand" href="/">⚾ 홈런레이스</a><div class="links"><a href="/guide.html">게임 방법</a><a href="/baseball.html" class="on">야구 상식</a><a href="/updates.html">업데이트</a><a href="/about.html">소개</a></div></nav>
+  <h1>⚾ 홈런 속 야구 상식</h1>
+  <p class="lead">투수의 공은 얼마나 빨리 오는지, 홈런 비거리는 무엇이 정하는지, 왜 일찍 치면 왼쪽으로 가는지. 홈런레이스를 만들면서 실제로 계산해 본 숫자들로 정리했습니다.</p>
+
+  <h2>1. 투수의 공은 몇 초 만에 도착할까</h2>
+  <p>투수판에서 홈플레이트까지는 <b>18.44m</b>입니다. 이 거리를 구속으로 나누면 공이 날아오는 시간을 대략 구할 수 있어요.</p>
+  <table>
+    <tr><th>구속</th><th class="n">18.44m를 날아오는 시간</th></tr>
+    <tr><td>140km/h</td><td class="n">약 0.47초</td></tr>
+    <tr><td>150km/h</td><td class="n">약 0.44초</td></tr>
+    <tr><td>160km/h</td><td class="n">약 0.42초</td></tr>
+    <tr><td>165km/h</td><td class="n">약 0.40초</td></tr>
+  </table>
+  <p>실제로는 투수가 앞으로 내디디며 공을 놓기 때문에 거리는 조금 짧고, 공은 날아오면서 조금씩 느려지므로 위 숫자는 어림값입니다. 방망이를 휘두르는 동작에도 시간이 걸리니, 타자는 공이 절반도 오기 전에 칠지 말지를 정해야 한다는 이야기가 나오는 이유예요.</p>
+  <div class="box"><p style="margin:0">홈런레이스에서는 이 시간이 너무 짧아 화면으로는 따라가기 어렵기 때문에, 공을 일부러 느리게 보여 줍니다. <b>이지는 약 2.6배, 하드는 1.7배, 익스트림은 1.3배</b> 느리게 날아와요. 그래서 익스트림 모드가 실제 구속 체감에 가장 가깝습니다.</p></div>
+
+  <h2>2. 비거리를 정하는 두 가지: 타구 속도와 발사각</h2>
+  <p>방망이에 맞은 공이 얼마나 멀리 가는지는 거의 두 가지로 정해집니다. 공이 방망이를 떠나는 속도(<b>타구 속도</b>)와, 땅에서부터 올라가는 각도(<b>발사각</b>)입니다. 아래는 홈런레이스의 타구 계산식으로 가운데 방향 비거리를 구해 본 결과예요.</p>
+  <table>
+    <tr><th>발사각</th><th class="n">타구 150km/h</th><th class="n">170km/h</th><th class="n">185km/h</th></tr>
+    <tr><td>10°</td><td class="n">60m</td><td class="n">73m</td><td class="n">83m</td></tr>
+    <tr><td>20°</td><td class="n">91m</td><td class="n">108m</td><td class="n">121m</td></tr>
+    <tr><td>25°</td><td class="n">101m</td><td class="n">119m</td><td class="n">132m</td></tr>
+    <tr><td>30°</td><td class="n">108m</td><td class="n">126m</td><td class="n">140m</td></tr>
+    <tr><td>35°</td><td class="n">111m</td><td class="n">130m</td><td class="n">144m</td></tr>
+    <tr><td>45°</td><td class="n">111m</td><td class="n">129m</td><td class="n">142m</td></tr>
+  </table>
+  <p>두 가지를 알 수 있어요.</p>
+  <ul>
+    <li><b>속도가 가장 중요합니다.</b> 같은 30°라도 150km/h 타구는 108m에 그쳐 가운데 담장(122m)을 넘기지 못하지만, 185km/h 타구는 140m까지 갑니다.</li>
+    <li><b>낮게 깔린 타구는 멀리 못 갑니다.</b> 10°처럼 낮은 라이너는 아무리 세게 맞아도 땅에 일찍 떨어져요. 반대로 너무 높이 뜨면 하늘로만 올라가고 앞으로는 덜 나갑니다.</li>
+  </ul>
+  <p>공기 저항이 얼마나 큰지도 확인해 볼 수 있습니다. 170km/h로 45° 쳐 올린 공은 공기가 없다면 계산상 약 228m를 날아가지만, 공기 저항을 넣으면 약 129m로 절반 가까이 줄어요. 실제 홈런이 생각보다 짧은 이유입니다.</p>
+  <p>메이저리그 분석에서는 타구 속도가 약 158km/h(98마일) 이상이면서 발사각이 26~30° 안팎인 타구를 '배럴'이라고 부르며, 이런 타구가 홈런이 될 가능성이 가장 높다고 봅니다. 타구 속도가 빨라질수록 홈런이 되는 각도 범위도 넓어져요.</p>
+  <div class="box"><p style="margin:0">홈런레이스에서는 스윙 타이밍이 정확할수록 타구 속도가 빨라지고, 발사각은 27° 근처를 중심으로 정해집니다. 타이밍이 크게 어긋나면 발사각이 위아래로 크게 흔들려 땅볼이나 높은 뜬공이 되기 쉬워요. <b>PERFECT</b> 판정이면 176km/h 이상, 24~32°의 좋은 타구가 나와 무조건 홈런이 됩니다.</p></div>
+
+  <h2>3. 담장: 거리만큼 높이도 중요하다</h2>
+  <p>야구장 외야 담장은 보통 파울라인 쪽이 가장 가깝고 가운데로 갈수록 멀어집니다. 국내 프로야구장은 대체로 파울라인까지 95~100m, 가운데까지 120~125m 안팎이에요. 담장의 높이도 구장마다 다릅니다.</p>
+  <p>홈런레이스 구장은 특정 구장을 본뜨지 않고 <b>파울라인 100m, 좌·우중간 약 113m, 가운데 122m</b>인 둥근 담장으로 만들었고, 높이는 <b>3.6m</b>입니다. 그래서 같은 비거리라도 방향에 따라 홈런이 되기도, 안 되기도 해요.</p>
+  <ul>
+    <li><b>담장 위를 넘어야 홈런.</b> 공이 담장 위치를 지나갈 때 높이가 3.6m보다 높아야 합니다. 120m를 날아갈 힘이 있어도 낮은 라이너는 담장을 맞고 떨어질 수 있어요(게임에서는 '펜스 직격').</li>
+    <li><b>파울라인 쪽은 쉽지만 점수는 적게.</b> 105m짜리 타구도 파울라인 쪽이면 홈런이지만, 가운데였다면 아웃입니다. 홈런레이스는 비거리가 곧 점수라서, 가운데로 멀리 넘긴 홈런이 가장 값집니다.</li>
+  </ul>
+
+  <h2>4. 당겨치기와 밀어치기</h2>
+  <p>오른손 타자가 공을 일찍, 몸 앞쪽에서 맞히면 공은 왼쪽(3루 쪽)으로 갑니다. 이걸 <b>당겨치기</b>라고 해요. 반대로 공을 몸 가까이까지 끌어들여 늦게 맞히면 오른쪽(1루 쪽)으로 가는 <b>밀어치기</b>가 됩니다. 방망이가 공을 만나는 순간, 방망이 끝이 어느 쪽을 보고 있는지가 다르기 때문이에요.</p>
+  <p>홈런레이스의 타자도 오른손 타자이고, 같은 원리를 씁니다. 공이 도착한 순간보다 <b>0.01초 일찍 칠 때마다 타구가 약 3° 왼쪽으로</b>, 늦게 칠 때마다 오른쪽으로 휘어 나갑니다(여기에 약간의 무작위가 더해져요). 그래서 0.15초쯤 어긋나면 45°를 넘어 파울라인 밖으로 나가 버립니다.</p>
+  <p>당겨치기 버튼이 따로 없는 이유도 여기에 있습니다. 실제 타자처럼 <b>타이밍 자체가 방향을 정하기</b> 때문이에요. 가운데로 멀리 보내고 싶다면, 결국 정확한 타이밍이 답입니다.</p>
+
+  <h2>직접 확인해 보세요</h2>
+  <p>타구가 날아갈 때 화면 아래에 <b>타구 속도와 발사각</b>이 표시됩니다. 위 표와 비교하며 쳐 보면 왜 홈런이 됐는지, 왜 담장을 맞았는지 보일 거예요.</p>
+  <a class="cta" href="/">홈런레이스 하러 가기 →</a>
+
+  <div class="foot">
+    <div>건의사항·문의 <a href="mailto:gogimandu.official@gmail.com">gogimandu.official@gmail.com</a></div>
+    <div><a href="/">게임하기</a> <span class="sep">|</span> <a href="/guide.html">게임 방법</a> <span class="sep">|</span> <a href="/baseball.html">야구 상식</a> <span class="sep">|</span> <a href="/updates.html">업데이트</a> <span class="sep">|</span> <a href="/about.html">소개</a> <span class="sep">|</span> <a href="/privacy.html">개인정보처리방침</a></div>
+  </div>
+</main>
+</body>
+</html>
