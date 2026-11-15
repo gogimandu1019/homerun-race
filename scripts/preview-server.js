@@ -3,7 +3,7 @@
 // 보안: 이 컴퓨터(127.0.0.1)에서만 접속 가능, 점(.)으로 시작하는 파일·폴더(비밀 키 파일, .git 등)는 내주지 않음.
 const http = require('http'), fs = require('fs'), path = require('path'), { execFile } = require('child_process');
 const ROOT = path.resolve(__dirname, '..'), PORT = +process.env.PORT || 8770, HOST = '127.0.0.1';
-const API = 'https://homerun-race-b3p3.vercel.app';
+const API = 'https://homerunracegame.com';
 const TYPES = { '.html':'text/html; charset=utf-8', '.js':'text/javascript', '.css':'text/css', '.txt':'text/plain; charset=utf-8', '.json':'application/json', '.xml':'application/xml', '.jpg':'image/jpeg', '.png':'image/png', '.svg':'image/svg+xml' };
 
 const deny = (res, code) => { res.writeHead(code); res.end(); };
@@ -26,8 +26,10 @@ http.createServer((req, res) => {
   const f = path.join(ROOT, u.pathname === '/' ? 'index.html' : rel);
   if (f !== ROOT && !f.startsWith(ROOT + path.sep)) return deny(res, 403);          // 폴더 밖(형제 폴더 포함) 차단
   if (path.relative(ROOT, f).split(path.sep).some(s => s.startsWith('.'))) return deny(res, 404); // 숨김 파일·폴더 차단
-  fs.readFile(f, (e, d) => {
+  // /guide 처럼 확장자 없는 주소는 guide.html 을 보여줌 (실제 사이트의 cleanUrls와 같게)
+  const file = !path.extname(f) && fs.existsSync(f + '.html') ? f + '.html' : f;
+  fs.readFile(file, (e, d) => {
     if (e) { res.writeHead(404); return res.end('not found'); }
-    res.writeHead(200, {'content-type': TYPES[path.extname(f)] || 'application/octet-stream'}); res.end(d);
+    res.writeHead(200, {'content-type': TYPES[path.extname(file)] || 'application/octet-stream'}); res.end(d);
   });
 }).listen(PORT, HOST, () => console.log(`preview on http://localhost:${PORT}`));
