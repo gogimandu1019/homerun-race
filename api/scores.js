@@ -3,11 +3,12 @@
 
 // 모드별 상한: 일반 모드는 15구 + 2배 이벤트 5개, 무한 모드는 아웃 3개까지 무제한(이벤트 없음)
 const LIMITS = {
-  easy:    { maxScore: 320000,   maxHomers: 15,   events: 5 },
-  hard:    { maxScore: 320000,   maxHomers: 15,   events: 5 },
-  extreme: { maxScore: 320000,   maxHomers: 15,   events: 5 },
+  easy:    { maxScore: 480000,   maxHomers: 15,   events: 5 },
+  hard:    { maxScore: 480000,   maxHomers: 15,   events: 5 },
+  extreme: { maxScore: 480000,   maxHomers: 15,   events: 5 },
   endless: { maxScore: 50000000, maxHomers: 1000, events: 0 },
 };
+const TIMING_MAX = 1.5;      // 타이밍 가중치 최대 배율 (PERFECT). index.html의 TIMING_BONUS와 맞출 것
 const MIN_HR_DIST = 95;      // 홈런 최소 비거리(파울라인 펜스 100m)에 여유를 둔 값
 const SAVE_GAP_SEC = 5;      // 같은 이름·모드로 연달아 저장할 수 있는 최소 간격(초). 무한 모드는 몇 초 만에 끝날 수 있음
 const MODES = Object.keys(LIMITS);
@@ -26,12 +27,12 @@ function cleanName(raw) {
 const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 
 // 점수·홈런 수·최장 비거리가 실제 게임에서 나올 수 있는 조합인지 확인
-// 게임 점수 = 홈런마다 round(비거리×100), 이벤트 공(일반 모드 최대 5개)은 2배. 비거리는 0.1m 단위.
+// 게임 점수 = 홈런마다 round(round(비거리×100) × 타이밍 배율), 이벤트 공(일반 모드 최대 5개)은 2배. 비거리는 0.1m 단위.
 function consistent(score, homers, longest, events) {
   if (homers === 0) return score === 0 && longest === 0;
   if (longest < MIN_HR_DIST) return false;
   const top = Math.round(longest * 100);                       // 가장 긴 홈런 1개의 점수
-  const max = top * (homers + Math.min(homers, events));        // 모든 홈런이 최장거리 + 이벤트 최대
+  const max = Math.round(top * TIMING_MAX) * (homers + Math.min(homers, events));   // 모든 홈런이 최장거리·PERFECT + 이벤트 최대
   const min = top + (homers - 1) * MIN_HR_DIST * 100;           // 최장 홈런 1개 + 나머지는 최소 거리
   return score >= min && score <= max;
 }

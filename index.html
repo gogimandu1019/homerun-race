@@ -194,7 +194,7 @@
   </div>
 
   <h2>점수는 이렇게 매겨요</h2>
-  <p>홈런 하나의 점수는 <b>비거리(m) × 100점</b>입니다. 125.3m 홈런이면 12,530점이고, 금색으로 빛나는 2배 이벤트 공이었다면 25,060점이에요. 담장을 넘기지 못한 타구는 0점이라, 한 경기 점수는 결국 "홈런을 몇 개, 얼마나 멀리 쳤는가"로 정해집니다.</p>
+  <p>홈런 하나의 점수는 <b>비거리(m) × 100점</b>에 <b>타이밍 보너스</b>를 곱한 값입니다. PERFECT로 넘긴 홈런은 <b>1.5배</b>, GOOD 홈런은 <b>1.2배</b>예요. 125.3m 홈런이면 기본 12,530점, PERFECT였다면 18,795점이고, 금색으로 빛나는 2배 이벤트 공까지 겹치면 37,590점이 됩니다. 담장을 넘기지 못한 타구는 0점이라, 한 경기 점수는 결국 "홈런을 몇 개, 얼마나 멀리 쳤는가"로 정해집니다.</p>
   <p>구장은 파울라인까지 100m, 가운데까지 122m인 둥근 펜스입니다. 공을 일찍 치면 왼쪽, 늦게 치면 오른쪽으로 날아가요. 파울라인 쪽은 넘기기 쉽지만 거리가 짧고, 가운데로 넘긴 홈런일수록 점수가 큽니다.</p>
 
   <h2>혼자보다 같이: 팀 순위와 도전장</h2>
@@ -246,6 +246,8 @@ function fenceDist(deg){
 
 // ===== 게임 상수 =====
 const TOTAL = 15, EVENTS = 5;
+// 타이밍 가중치: 홈런 점수에 판정별 배율을 곱함 (빠름·늦음 홈런은 1배). 서버(api/scores.js)의 TIMING_MAX와 맞출 것
+const TIMING_BONUS = { 'PERFECT!': 1.5, 'GOOD': 1.2 }, TIMING_MAX = 1.5;
 const WINDOW = 150;        // 스윙 가능 범위 (ms, 도착 시점 기준 ±)
 // 난이도별 설정: slow=투구 감속 배율(클수록 느림), q=타이밍 허용 폭, perfect/good=판정 범위(ms)
 const MODES = {
@@ -405,8 +407,9 @@ function finishPitch(){
   else {
     const foul = Math.abs(r.spray) > 45;
     const d = Math.round(r.sim.dist*10)/10;
-    const pts = r.sim.homer ? Math.round(d*100) * (pitch.ev ? 2 : 1) : 0;
-    rec = { homer:r.sim.homer, dist:d, pts, ev:pitch.ev, note: foul ? '파울' : r.sim.homer ? '홈런' : (r.launch < 10 ? '땅볼' : r.sim.hAtFence !== null ? '펜스 직격' : '아웃'), kmh:r.kmh, launch:r.launch };
+    const mult = r.sim.homer ? (TIMING_BONUS[r.label] || 1) : 1;
+    const pts = r.sim.homer ? Math.round(Math.round(d*100) * mult) * (pitch.ev ? 2 : 1) : 0;
+    rec = { homer:r.sim.homer, dist:d, pts, mult, ev:pitch.ev, note: foul ? '파울' : r.sim.homer ? '홈런' : (r.launch < 10 ? '땅볼' : r.sim.hAtFence !== null ? '펜스 직격' : '아웃'), kmh:r.kmh, launch:r.launch };
   }
   results[pitchIdx] = rec; score += rec.pts; if (rec.homer) hrCount++;
   setState('result'); pitch.rec = rec; renderDots();
@@ -425,7 +428,7 @@ function endGame(){
     : `<b>${score.toLocaleString()}점</b> <span>홈런 ${hrCount} / ${TOTAL} · 최장거리 ${longest ? longest.toFixed(1)+'m' : '-'}</span>`;
   lastGame = { mode, score, homers:hrCount, longest, team:uniform.id, no:jerseyNo(), newBest, level:endlessLevel() + 1,
                dots: results.map(r => r ? (r.homer ? (r.ev ? 'ev' : 'hr') : 'out') : '') };
-  let rows = results.map((r,i) => `<tr class="${r.homer?'hr':''}"><td>${i+1}${r.ev?'<b class="ev">2×</b>':''}</td><td>${r.note}</td><td>${r.dist?r.dist.toFixed(1)+'m':'-'}</td><td>${r.pts.toLocaleString()}</td></tr>`).join('');
+  let rows = results.map((r,i) => `<tr class="${r.homer?'hr':''}"><td>${i+1}${r.ev?'<b class="ev">2×</b>':''}</td><td>${r.note}${r.mult > 1 ? `<b class="ev">×${r.mult}</b>` : ''}</td><td>${r.dist?r.dist.toFixed(1)+'m':'-'}</td><td>${r.pts.toLocaleString()}</td></tr>`).join('');
   $('card').innerHTML = `<h1 class="endh">${newBest?'🏆 신기록!':'경기 종료'} <span class="tag">${M().name} 모드</span></h1>
     <p class="endscore">${summary}</p>${versusLine()}
     <div class="save"><input id="nm" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="nickname"><button id="sv">점수 저장</button></div>
@@ -547,7 +550,7 @@ function possible(c){
   if (c.homers === 0) return c.score === 0 && c.longest === 0;
   if (c.longest < MIN_HR_DIST) return false;
   const events = c.mode === 'endless' ? 0 : EVENTS;
-  const hi = Math.round((c.longest + 0.05) * 100) * (c.homers + Math.min(c.homers, events));
+  const hi = Math.round(Math.round((c.longest + 0.05) * 100) * TIMING_MAX) * (c.homers + Math.min(c.homers, events));
   const lo = Math.round((c.longest - 0.05) * 100) + (c.homers - 1) * MIN_HR_DIST * 100;
   return c.score >= lo && c.score <= hi;
 }
@@ -558,7 +561,7 @@ const challenge = (() => {
     if (!isMode(m) || !q.has('s')) return null;
     const num = (k, max) => { const v = Number(q.get(k)); return Number.isFinite(v) ? Math.min(max, Math.max(0, v)) : 0; };
     const endless = m === 'endless';
-    const c = { mode:m, score:Math.floor(num('s', endless ? 5e7 : 320000)), homers:Math.floor(num('h', endless ? 1000 : TOTAL)),
+    const c = { mode:m, score:Math.floor(num('s', endless ? 5e7 : 480000)), homers:Math.floor(num('h', endless ? 1000 : TOTAL)),
                 longest:num('l', 200), team:teamOf(q.get('t')) ? q.get('t') : '', name:(q.get('n') || '').trim().slice(0, 12) };
     history.replaceState(null, '', location.pathname);   // 새로고침해도 주소가 깔끔하게
     if (!possible(c)) return null;   // 실제로 나올 수 없는 조합이면 도전장을 보여 주지 않음
@@ -706,7 +709,7 @@ function showTitle(){
     ? `<p><b style="color:#ffc83d">아웃 3개</b>가 될 때까지 계속 칩니다. 홈런이 아니면(헛스윙·파울·아웃 모두) 아웃 1개!</p>
        <p>랭킹은 <b>홈런 수</b>, 같으면 <b>최장 비거리</b> 순. <b style="color:#ffc83d">PERFECT는 무조건 홈런!</b></p>`
     : `<p>총 <b>${TOTAL}개</b>의 공이 날아옵니다. 그중 <b style="color:#ffc83d">${EVENTS}개는 점수 2배</b> 이벤트!</p>
-       <p>홈런이면 <b>비거리(m) × 100점</b>, 홈런이 아니면 0점. <b style="color:#ffc83d">PERFECT는 무조건 홈런!</b></p>`;
+       <p>홈런이면 <b>비거리(m) × 100점</b>, 타이밍 보너스 <b style="color:#ffc83d">PERFECT ×1.5 · GOOD ×1.2</b>. PERFECT는 무조건 홈런!</p>`;
   const refresh = () => {
     document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
     $('modeinfo').textContent = info[mode];
@@ -956,7 +959,8 @@ function drawResult(now){
     for (let k=0;k<26;k++){ const a = k/26*Math.PI*2, d = 20 + age*180; ctx.fillStyle = ['#ffc83d','#4fd1ff','#ff6b66','#46d37a'][k%4]; ctx.globalAlpha = Math.max(0, 1-age/1.1); ctx.beginPath(); ctx.arc(gp.x+Math.cos(a)*d, gp.y+Math.sin(a)*d*0.7, 3.5, 0, Math.PI*2); ctx.fill(); }
     ctx.globalAlpha = 1;
     bigText('HOME RUN!', '#ffc83d', H*0.36);
-    infoBox([`${rec.dist.toFixed(1)} m`, `+${rec.pts.toLocaleString()}점${rec.ev ? '  (2배 이벤트!)' : ''}`], true);
+    const tags = [rec.mult > 1 ? `${rec.mult === TIMING_MAX ? 'PERFECT' : 'GOOD'} ×${rec.mult}` : '', rec.ev ? '2배 이벤트!' : ''].filter(Boolean).join(' · ');
+    infoBox([`${rec.dist.toFixed(1)} m`, `+${rec.pts.toLocaleString()}점${tags ? `  (${tags})` : ''}`], true);
   } else {
     bigText(rec.note, '#ff6b66', H*0.36);
     infoBox([`${rec.dist.toFixed(1)} m`, '홈런 실패 · 0점'], true);
